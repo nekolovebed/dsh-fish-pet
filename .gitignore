@@ -5,3 +5,7 @@ _ref_*/
 .DS_Store
 Thumbs.db
 .trace/
+
+# scratch used by the one-off push script
+.ghpush/
+.workbuddy/
