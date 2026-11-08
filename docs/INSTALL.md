@@ -30,7 +30,7 @@ dsh plugin --profile web add D:/MyProject/DSH-PET
 ### 方式 B：从 GitHub 安装
 
 ```bash
-dsh plugin --profile web add git+https://github.com/<你的用户名>/dsh-fish-pet.git
+dsh plugin --profile web add git+https://github.com/nekolovebed/dsh-fish-pet.git
 ```
 
 插件**不需要构建**：`lib/client.js` 是手写的成品，没有 `prepare` 脚本，pnpm 拉下来即可用。

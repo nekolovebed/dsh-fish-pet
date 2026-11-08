@@ -30,7 +30,7 @@
 npm install
 dsh plugin --profile web add D:/MyProject/DSH-PET
 # 或从 GitHub：
-# dsh plugin --profile web add git+https://github.com/<you>/dsh-fish-pet.git
+# dsh plugin --profile web add git+https://github.com/nekolovebed/dsh-fish-pet.git
 ```
 
 **装完必须完全退出 DSH 再启动。**
