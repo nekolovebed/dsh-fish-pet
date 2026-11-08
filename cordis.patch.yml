@@ -1,0 +1,21 @@
+# dsh-fish-pet: one host row. The browser half is declared through
+# package.json -> dsh.client and is loaded by the web bundle.
+- insert:
+    - id: dsh-fish-pet
+      name: dsh-fish-pet
+      config:
+        enabled: true
+        scale: 1
+        bubble: true
+        showBalance: true
+        balanceProvider: auto
+        balanceApiKey: ''
+        balanceBaseUrl: ''
+        balanceUrl: ''
+        balanceJsonPath: ''
+        priceInputPerMillion: 0
+        priceOutputPerMillion: 0
+        chatEnabled: true
+        chatMode: session
+        chatCwd: ''
+        maxTasks: 6
