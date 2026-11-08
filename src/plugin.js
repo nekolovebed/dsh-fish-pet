@@ -187,7 +187,15 @@ function mount(ctx, config) {
     warn: (note, error) => logger.warn?.(`[dsh-fish-pet] ${note}`, error),
   })
 
-  const send = (payload) => stream.broadcast(payload)
+  // Every state frame carries the enabled flag, so the overlay can disappear
+  // and come back without waiting for a reconnect (a stale `hello` snapshot
+  // would otherwise pin it to whatever the config was at connect time).
+  const decorate = (payload) => (
+    payload?.kind === Kind.STATE && settings.get().enabled === false
+      ? { ...payload, off: true }
+      : payload
+  )
+  const send = (payload) => stream.broadcast(decorate(payload))
   const pushAll = () => {
     send(tracker.stateMessage())
     send(tracker.tasksMessage())
@@ -272,9 +280,10 @@ function mount(ctx, config) {
         'x-accel-buffering': 'no',
       })
       res.write('retry: 2000\n\n')
+      const config = settings.get()
       const seed = [
-        envelope(Kind.HELLO, { plugin: 'dsh-fish-pet', config: settings.get() }),
-        ...tracker.snapshot(settings.get()),
+        envelope(Kind.HELLO, { plugin: 'dsh-fish-pet', config }),
+        ...tracker.snapshot(config).map(decorate),
         balancePayload(),
       ]
       const remove = stream.add(res, seed)
