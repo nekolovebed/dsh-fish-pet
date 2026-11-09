@@ -11,12 +11,18 @@
  * - `apply()` never throws. DSH treats a rejected activation as fatal for the
  *   whole boot, so a broken pet must cost the user its pet, never its harness.
  */
-import { appendFileSync } from 'node:fs'
+import { appendFileSync, createReadStream, readFileSync } from 'node:fs'
 import { Kind, message as envelope } from './protocol.js'
 import { CompanionTracker } from './state.js'
 import { ChatBridge } from './chat.js'
 import { loadBalance, unavailable } from './balance.js'
 import { Config, NAMESPACE, defaults, normalizeConfig, writableKeys } from './config.js'
+import { DEFAULT_PACKS_ROOT, PackRegistry } from './packs.js'
+import { resolveWorn, normalizeWorn } from './wardrobe.js'
+import { PetDirector } from './pet.js'
+import { SayBoard } from './say.js'
+import { DesktopPetWindow } from './desktop.js'
+import { registerPetTools } from './tools.js'
 
 export { Config, NAMESPACE }
 
@@ -41,6 +47,11 @@ const CONFIG_ENDPOINT = '/plugins/dsh-fish-pet/config'
 const CHAT_ENDPOINT = '/plugins/dsh-fish-pet/chat'
 const STATUS_ENDPOINT = '/plugins/dsh-fish-pet/status'
 const BALANCE_REFRESH_ENDPOINT = '/plugins/dsh-fish-pet/balance'
+const PACKS_ENDPOINT = '/plugins/dsh-fish-pet/packs'
+const ASSET_ENDPOINT = '/plugins/dsh-fish-pet/asset'
+const DESKTOP_ENDPOINT = '/plugins/dsh-fish-pet/desktop'
+const DESKTOP_SCRIPT = '/plugins/dsh-fish-pet/desktop.js'
+const SAY_ENDPOINT = '/plugins/dsh-fish-pet/say'
 
 export const endpoints = {
   stream: STREAM_ENDPOINT,
@@ -48,6 +59,28 @@ export const endpoints = {
   chat: CHAT_ENDPOINT,
   status: STATUS_ENDPOINT,
   balance: BALANCE_REFRESH_ENDPOINT,
+  packs: PACKS_ENDPOINT,
+  asset: ASSET_ENDPOINT,
+  desktop: DESKTOP_ENDPOINT,
+  say: SAY_ENDPOINT,
+}
+
+/** DSH's web UI puts a session token in its URL; carry it into the overlay. */
+function sanitizeToken(value) {
+  const text = String(value ?? '')
+  return /^[A-Za-z0-9._~-]{1,256}$/.test(text) ? text : ''
+}
+
+function tokenQuery(token) {
+  return token ? `?token=${encodeURIComponent(token)}` : ''
+}
+
+function tokenFromUrl(rawUrl) {
+  try {
+    return sanitizeToken(new URL(rawUrl || '/', 'http://127.0.0.1').searchParams.get('token'))
+  } catch {
+    return ''
+  }
 }
 
 /** Fan-out channel for server-sent events, with late-subscriber replay. */
@@ -187,6 +220,17 @@ function mount(ctx, config) {
     warn: (note, error) => logger.warn?.(`[dsh-fish-pet] ${note}`, error),
   })
 
+  // Asset packs are read from disk once at mount, then re-scanned on demand.
+  // A pack that fails validation is skipped with a reason; the pet keeps its
+  // built-in look rather than disappearing.
+  const packsRoot = (config) => String(config.packsDir || '').trim() || DEFAULT_PACKS_ROOT
+  const packs = new PackRegistry({ root: packsRoot(settings.get()), log: trace })
+  trace(`packs root = ${packs.root}`)
+  packs.reload()
+  const director = new PetDirector({ emit: (payload) => stream.broadcast(payload) })
+  const say = new SayBoard({ emit: (payload) => stream.broadcast(payload) })
+  const desktop = new DesktopPetWindow({ width: 300, height: 460, log: trace })
+
   // Every state frame carries the enabled flag, so the overlay can disappear
   // and come back without waiting for a reconnect (a stale `hello` snapshot
   // would otherwise pin it to whatever the config was at connect time).
@@ -196,14 +240,64 @@ function mount(ctx, config) {
       : payload
   )
   const send = (payload) => stream.broadcast(decorate(payload))
+  const balancePayload = () => envelope(Kind.BALANCE, { ...balance })
+  const catalogPayload = () => envelope(Kind.CATALOG, { catalog: packs.catalog() })
+  const wardrobePayload = () => {
+    const config = settings.get()
+    const resolved = resolveWorn(config.worn, packs.catalog())
+    return envelope(Kind.WARDROBE, {
+      skinId: config.skinId,
+      worn: resolved.worn,
+      wearing: resolved.items,
+      rejected: resolved.rejected,
+      assetsEnabled: config.assetsEnabled !== false,
+    })
+  }
   const pushAll = () => {
     send(tracker.stateMessage())
     send(tracker.tasksMessage())
     send(tracker.usageMessage(settings.get()))
     send(balancePayload())
+    send(wardrobePayload())
+    send(catalogPayload())
+    send(director.snapshot())
+    send(say.snapshot())
   }
 
-  const balancePayload = () => envelope(Kind.BALANCE, { ...balance })
+  // Only push the catalog when it actually changed; `pet_status` rescans on
+  // every call and the client should not re-render for an identical catalog.
+  let catalogSignature = ''
+  const signatureOf = (catalog) => [
+    catalog.skins.map((entry) => entry.id).join(','),
+    catalog.accessories.map((entry) => entry.id).join(','),
+    catalog.errors.length,
+  ].join('|')
+  const syncCatalog = (force = false) => {
+    const signature = signatureOf(packs.catalog())
+    if (!force && signature === catalogSignature) return false
+    catalogSignature = signature
+    send(catalogPayload())
+    send(wardrobePayload())
+    return true
+  }
+  const reloadPacks = (options = {}) => {
+    const result = packs.reload()
+    if (!options.quiet) syncCatalog(true)
+    else syncCatalog(false)
+    return result
+  }
+  syncCatalog(true)
+
+  const patchConfig = async (patch) => {
+    const merged = normalizeConfig({ ...settings.get(), ...patch })
+    // Slot exclusivity is enforced here so the settings page, the HTTP patch and
+    // the agent all end up with the same wardrobe.
+    if (Object.prototype.hasOwnProperty.call(patch, 'worn')) {
+      merged.worn = normalizeWorn(merged.worn, packs.catalog())
+    }
+    if (typeof settings.update === 'function') await settings.update(merged)
+    return settings.get()
+  }
 
   const refreshBalance = async () => {
     const current = settings.get()
@@ -245,14 +339,26 @@ function mount(ctx, config) {
   }, { global: true })
 
   // --- config -------------------------------------------------------------
+  let lastConfig = settings.get()
   const unwatch = settings.watch((next) => {
     try {
+      const previous = lastConfig
+      lastConfig = next
+
+      // A different packs root invalidates every loaded manifest.
+      if (packsRoot(previous) !== packsRoot(next)) {
+        packs.setRoot(packsRoot(next))
+        trace(`packs root changed -> ${packs.root}`)
+        reloadPacks()
+      }
+
       if (next.enabled === false) {
         send(envelope(Kind.STATE, { pose: 'IDLE', stage: '已关闭', detail: '在设置里重新开启', off: true }))
         return
       }
       send(envelope(Kind.STATE, { ...tracker.stateMessage(), scale: next.scale }))
       send(tracker.usageMessage(next))
+      send(wardrobePayload())
     } catch (error) {
       logger.error?.('[dsh-fish-pet] 应用设置失败', error)
     }
@@ -282,9 +388,12 @@ function mount(ctx, config) {
       res.write('retry: 2000\n\n')
       const config = settings.get()
       const seed = [
-        envelope(Kind.HELLO, { plugin: 'dsh-fish-pet', config }),
+        envelope(Kind.HELLO, { plugin: 'dsh-fish-pet', config, catalog: packs.catalog() }),
         ...tracker.snapshot(config).map(decorate),
         balancePayload(),
+        wardrobePayload(),
+        director.snapshot(),
+        say.snapshot(),
       ]
       const remove = stream.add(res, seed)
       req.on('close', remove)
@@ -298,9 +407,7 @@ function mount(ctx, config) {
         const patch = await readJsonBody(req)
         const unknown = Object.keys(patch).filter((key) => !writableKeys.has(key))
         if (unknown.length > 0) return json(res, 400, { error: `未知设置项: ${unknown.join(', ')}` })
-        const merged = normalizeConfig({ ...settings.get(), ...patch })
-        if (typeof settings.update === 'function') await settings.update(merged)
-        const next = settings.get()
+        const next = await patchConfig(patch)
         logger.info?.(`[dsh-fish-pet] 设置已更新 (${Object.keys(patch).join(', ')})`)
         if (Object.prototype.hasOwnProperty.call(patch, 'showBalance')
           || Object.prototype.hasOwnProperty.call(patch, 'balanceProvider')
@@ -321,15 +428,160 @@ function mount(ctx, config) {
         tasks: tracker.tasksMessage(),
         usage: tracker.usageMessage(settings.get()),
         balance: balancePayload(),
+        wardrobe: wardrobePayload(),
+        action: director.snapshot(),
+        say: say.snapshot(),
+        desktop: desktop.status(),
+        packs: { root: packs.root, skins: packs.skins.size, accessories: packs.accessories.size, errors: packs.errors },
         chatReady: chat.ready || settings.get().chatEnabled,
       })
     }, 'dsh-fish-pet: status endpoint')
+
+    // Catalog for the browser and for anyone poking the API by hand.
+    route(PACKS_ENDPOINT, (req, res) => {
+      if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
+      if (req.method === 'POST') {
+        const result = reloadPacks()
+        return json(res, 200, { ok: true, ...result, catalog: packs.catalog() })
+      }
+      if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' })
+      packs.reload()
+      return json(res, 200, packs.catalog())
+    }, 'dsh-fish-pet: pack catalog')
+
+    /**
+     * Asset bytes, by query rather than by path: the host route contract only
+     * exposes exact paths here, and a query keeps the traversal guard in one
+     * place (`PackRegistry.resolveAsset`).
+     */
+    route(ASSET_ENDPOINT, (req, res) => {
+      if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        return json(res, 405, { error: 'method not allowed' })
+      }
+      let params
+      try {
+        params = new URL(req.url || '/', 'http://127.0.0.1').searchParams
+      } catch {
+        return json(res, 400, { error: 'bad url' })
+      }
+      const asset = packs.resolveAsset(params.get('pack'), params.get('path'))
+      if (!asset) return json(res, 404, { error: 'asset not found' })
+
+      const etag = `"${Math.round(asset.mtimeMs)}-${asset.size}"`
+      if (req.headers['if-none-match'] === etag) {
+        res.writeHead(304, { etag })
+        return res.end()
+      }
+      const headers = {
+        'content-type': asset.type,
+        'content-length': asset.size,
+        etag,
+        'cache-control': 'public, max-age=300',
+        'x-content-type-options': 'nosniff',
+      }
+      // Belt and braces: even though these images are referenced through <img>,
+      // an SVG opened directly in a tab must not be able to run script.
+      if (asset.type === 'image/svg+xml') headers['content-security-policy'] = "default-src 'none'; style-src 'unsafe-inline'"
+      res.writeHead(200, headers)
+      if (req.method === 'HEAD') return res.end()
+      const stream_ = createReadStream(asset.file)
+      stream_.on('error', () => {
+        try {
+          res.destroy()
+        } catch {}
+      })
+      stream_.pipe(res)
+    }, 'dsh-fish-pet: pack asset')
 
     route(BALANCE_REFRESH_ENDPOINT, async (req, res) => {
       if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
       if (req.method !== 'POST' && req.method !== 'GET') return json(res, 405, { error: 'method not allowed' })
       json(res, 200, await refreshBalance())
     }, 'dsh-fish-pet: balance refresh')
+
+    route(DESKTOP_SCRIPT, (req, res) => {
+      if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
+      try {
+        const body = readFileSync(new URL('../lib/desktop.js', import.meta.url))
+        res.writeHead(200, {
+          'content-type': 'text/javascript; charset=utf-8',
+          'cache-control': 'no-store',
+          'content-length': body.length,
+        })
+        return res.end(body)
+      } catch {
+        return json(res, 500, { error: 'desktop script missing' })
+      }
+    }, 'dsh-fish-pet: desktop script')
+
+    // The overlay window loads this exact URL; POST controls its lifecycle.
+    // The page URL keeps DSH's session token, which is also injected into the
+    // script tag and picked up by the renderer for SSE and asset requests.
+    route(DESKTOP_ENDPOINT, async (req, res) => {
+      if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
+
+      if (req.method === 'GET') {
+        try {
+          const query = tokenQuery(tokenFromUrl(req.url))
+          const html = readFileSync(new URL('../lib/desktop.html', import.meta.url), 'utf8')
+            .replaceAll('__DSH_TOKEN_QUERY__', query)
+          res.writeHead(200, {
+            'content-type': 'text/html; charset=utf-8',
+            'cache-control': 'no-store',
+            'content-length': Buffer.byteLength(html),
+          })
+          return res.end(html)
+        } catch {
+          return json(res, 500, { error: 'desktop page missing' })
+        }
+      }
+
+      if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
+      let action = 'status'
+      let token = ''
+      try {
+        const payload = await readJsonBody(req, 2048)
+        action = String(payload.action || 'status')
+        token = sanitizeToken(payload.token)
+      } catch {
+        return json(res, 400, { error: 'bad body' })
+      }
+
+      if (action === 'open') {
+        const host = String(req.headers.host || '')
+        if (!host) return json(res, 400, { error: 'missing host header' })
+        const query = tokenQuery(token || tokenFromUrl(req.headers.referer))
+        const url = `http://${host}${DESKTOP_ENDPOINT}${query}`
+        const result = desktop.open(url)
+        return json(res, result.ok ? 200 : 501, { ...result, ...desktop.status() })
+      }
+      if (action === 'close') {
+        desktop.close()
+        return json(res, 200, desktop.status())
+      }
+      return json(res, 200, desktop.status())
+    }, 'dsh-fish-pet: desktop window')
+
+    /**
+     * A plain HTTP door into the speech bubble, for agents or scripts that do
+     * not go through the tool registry. `pet_say` calls the same SayBoard.
+     */
+    route(SAY_ENDPOINT, async (req, res) => {
+      if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
+      if (req.method === 'GET') return json(res, 200, say.snapshot())
+      if (req.method === 'DELETE') {
+        say.clear()
+        return json(res, 200, say.snapshot())
+      }
+      if (req.method !== 'POST') return json(res, 405, { error: 'method not allowed' })
+      try {
+        const payload = await readJsonBody(req, 4096)
+        return json(res, 200, say.say({ text: payload?.text, durationMs: payload?.durationMs }))
+      } catch (error) {
+        return json(res, 400, { error: error instanceof Error ? error.message : String(error) })
+      }
+    }, 'dsh-fish-pet: speech bubble')
 
     route(CHAT_ENDPOINT, async (req, res) => {
       if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
@@ -358,6 +610,38 @@ function mount(ctx, config) {
     logger.warn?.(`[dsh-fish-pet] 无法注册 HTTP 路由: ${error instanceof Error ? error.message : String(error)}`)
   }
 
+  // --- agent surface -------------------------------------------------------
+  // `tools` is requested through `ctx.inject` rather than the static `inject`
+  // list: on a harness without the service the plugin must still load, and a
+  // missing static dependency would keep `apply` from ever running.
+  let disposeTools = null
+  try {
+    const registerTools = (toolCtx) => {
+      try {
+        disposeTools = registerPetTools(toolCtx, {
+          packs,
+          director,
+          getConfig: () => settings.get(),
+          patchConfig,
+          tracker: () => tracker,
+          say,
+          reloadPacks,
+        }, {
+          warn: (note) => logger.warn?.(`[dsh-fish-pet] ${note}`),
+        })
+        trace('pet tools registered')
+      } catch (error) {
+        trace(`tools registration threw: ${error instanceof Error ? error.message : String(error)}`)
+        logger.warn?.('[dsh-fish-pet] Agent 工具注册失败', error)
+      }
+    }
+    if (typeof ctx.inject === 'function') ctx.inject(['tools'], registerTools)
+    else registerTools(ctx)
+  } catch (error) {
+    trace(`tools inject failed: ${error instanceof Error ? error.message : String(error)}`)
+    logger.warn?.('[dsh-fish-pet] 无法接入 Agent 工具（桌宠显示不受影响）')
+  }
+
   // Prime the panel so the first client paint is never empty.
   pushAll()
   void refreshBalance()
@@ -370,6 +654,10 @@ function mount(ctx, config) {
       unwatch?.()
       onEvent?.()
       onDisposed?.()
+      disposeTools?.()
+      director.dispose()
+      say.dispose()
+      desktop.close()
     } catch (error) {
       logger.error?.('[dsh-fish-pet] 清理失败', error)
     }

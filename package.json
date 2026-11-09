@@ -13,7 +13,8 @@
   },
   "files": [
     "src/",
-    "lib/client.js",
+    "lib/",
+    "packs/",
     "cordis.patch.yml",
     "docs/",
     "LICENSE",

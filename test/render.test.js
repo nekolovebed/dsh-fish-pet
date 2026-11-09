@@ -190,3 +190,172 @@ test('a broken loader is reported instead of thrown', () => {
   }
   assert.ok(errors.some((line) => line.includes('dsh-fish-pet')))
 })
+
+// ---------------------------------------------------------------------------
+// Pack renderer. `__internals` exists so a skin can be rendered without an
+// EventSource; it is not part of the loader contract.
+// ---------------------------------------------------------------------------
+
+const SKIN = {
+  canvas: { width: 140, height: 130 },
+  anchors: { head: [0.5, 0.3] },
+  layers: [
+    { id: 'body', src: '/body.svg', z: 10 },
+    { id: 'eyes', z: 20, variants: { open: '/eyes-open.svg', happy: '/eyes-happy.svg' }, motion: 'blink', pivot: [0.49, 0.55] },
+  ],
+  expressions: { IDLE: { eyes: 'open' }, SUCCESS: { eyes: 'happy' }, SLEEP: { eyes: 'open' } },
+}
+
+const CAT_EARS = {
+  id: 'cat-ears',
+  name: '猫耳',
+  src: '/ears.svg',
+  slot: 'head',
+  anchor: 'head',
+  offset: [0, 0.02],
+  pivot: [0.5, 0.9],
+  scale: 0.46,
+  z: 40,
+  motion: 'sway',
+}
+
+test('the pack renderer stacks layers, switches expressions and anchors props', () => {
+  const { mod } = loadClient()
+  const { RigStage } = mod.__internals
+
+  const html = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: SKIN, worn: [CAT_EARS], pose: 'IDLE', action: null,
+  }))
+
+  assert.match(html, /fp-pose-IDLE/)
+  assert.match(html, /fp-layer/)
+  assert.match(html, /fp-motion-blink/)
+  assert.match(html, /\/eyes-open\.svg/, 'IDLE must use the open eyes variant')
+  assert.match(html, /\/body\.svg/)
+  assert.match(html, /fp-prop/)
+  assert.match(html, /\/ears\.svg/)
+  assert.match(html, /fp-motion-sway/)
+
+  const success = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: SKIN, worn: [], pose: 'SUCCESS', action: null,
+  }))
+  assert.match(success, /\/eyes-happy\.svg/, 'SUCCESS must switch the variant')
+})
+
+test('an action borrows a pose for its expression and adds its own class', () => {
+  const { mod } = loadClient()
+  const { RigStage } = mod.__internals
+
+  const html = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: SKIN, worn: [CAT_EARS], pose: 'WORKING', action: 'sleep',
+  }))
+  assert.match(html, /fp-act-sleep/)
+  assert.match(html, /fp-pose-WORKING/)
+  assert.match(html, /\/eyes-open\.svg/, 'SLEEP expression is borrowed from the skin table')
+})
+
+test('a prop restricted to some poses stays off in the others', () => {
+  const { mod } = loadClient()
+  const { RigStage } = mod.__internals
+  const restricted = { ...CAT_EARS, poses: ['SUCCESS'] }
+
+  const idle = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: SKIN, worn: [restricted], pose: 'IDLE', action: null,
+  }))
+  assert.doesNotMatch(idle, /\/ears\.svg/)
+
+  const success = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: SKIN, worn: [restricted], pose: 'SUCCESS', action: null,
+  }))
+  assert.match(success, /\/ears\.svg/)
+})
+
+test('props and layers share one z stack, so a back item renders behind the body', () => {
+  const { mod } = loadClient()
+  const { RigStage } = mod.__internals
+  const cape = {
+    id: 'cape', name: '披风', src: '/cape.svg', slot: 'back', anchor: 'head',
+    offset: [0, 0], pivot: [0.5, 0.1], scale: 0.8, z: 6,
+  }
+  const html = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: SKIN, worn: [cape, CAT_EARS], pose: 'IDLE', action: null,
+  }))
+
+  assert.ok(html.indexOf('/cape.svg') < html.indexOf('/body.svg'), 'cape must sit behind the body')
+  assert.ok(html.indexOf('/body.svg') < html.indexOf('/ears.svg'), 'cat ears must sit in front of the body')
+})
+
+test('an animated skin can opt out of props and map actions to variants', () => {
+  const { mod } = loadClient()
+  const { RigStage } = mod.__internals
+  const skin = {
+    canvas: { width: 220, height: 300 },
+    propsEnabled: false,
+    actionVariants: { wave: 'wave' },
+    layers: [{ id: 'base', z: 10, variants: { idle: '/idle.webp', wave: '/wave.webp' } }],
+    expressions: { IDLE: { base: 'idle' } },
+  }
+
+  const idle = renderToStaticMarkup(React.createElement(RigStage, {
+    skin, worn: [CAT_EARS], pose: 'IDLE', action: null,
+  }))
+  assert.match(idle, /\/idle\.webp/)
+  assert.doesNotMatch(idle, /ears\.svg/, 'propsEnabled:false must skip the wardrobe')
+
+  const waving = renderToStaticMarkup(React.createElement(RigStage, {
+    skin, worn: [], pose: 'IDLE', action: 'wave',
+  }))
+  assert.match(waving, /\/wave\.webp/, 'actionVariants must win over the pose variant')
+})
+
+test('a motion clip hides overlays, props and CSS motion while it plays', () => {
+  const { mod } = loadClient()
+  const { RigStage } = mod.__internals
+  const skin = {
+    canvas: { width: 220, height: 300 },
+    layers: [
+      { id: 'base', z: 10, variants: { still: '/base.webp', wave: '/wave.webp' } },
+      { id: 'fx', z: 60, variants: { none: '/none.svg', thinking: '/dots.svg' } },
+    ],
+    expressions: {
+      IDLE: { base: 'still', fx: 'none' },
+      THINKING: { base: 'still', fx: 'thinking' },
+    },
+    actionVariants: { wave: 'wave' },
+    clipVariants: ['wave'],
+    clipLayer: 'base',
+    propsEnabled: true,
+  }
+
+  const idle = renderToStaticMarkup(React.createElement(RigStage, {
+    skin, worn: [CAT_EARS], pose: 'IDLE', action: null,
+  }))
+  assert.match(idle, /\/base\.webp/)
+  assert.match(idle, /\/none\.svg/, 'the fx layer is part of the still rig')
+  assert.match(idle, /ears\.svg/, 'wardrobe props are visible on the still rig')
+  assert.doesNotMatch(idle, /fp-clip/)
+
+  const waving = renderToStaticMarkup(React.createElement(RigStage, {
+    skin, worn: [CAT_EARS], pose: 'IDLE', action: 'wave',
+  }))
+  assert.match(waving, /\/wave\.webp/)
+  assert.doesNotMatch(waving, /\/none\.svg/, 'overlay layers would slide over a moving clip')
+  assert.doesNotMatch(waving, /ears\.svg/, 'static props would slide over a moving clip')
+  assert.match(waving, /fp-clip/, 'CSS motion must be suppressed while the clip plays')
+  assert.doesNotMatch(waving, /fp-fx/, "built-in pose marks must not double up with a pack's fx layer")
+})
+
+test('the active skin follows the wardrobe message, then the config', () => {
+  const { mod } = loadClient()
+  const { activeSkin, wornItems } = mod.__internals
+  const catalog = { skins: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], accessories: [CAT_EARS] }
+
+  assert.equal(activeSkin({ catalog, wardrobe: { skinId: 'b' } }).id, 'b')
+  assert.equal(activeSkin({ catalog, hello: { config: { skinId: 'a' } } }).id, 'a')
+  assert.equal(activeSkin({ catalog, wardrobe: { skinId: 'gone' } }).id, 'a', 'unknown id falls back to the first pack')
+  assert.equal(activeSkin({}), null)
+
+  assert.deepEqual(wornItems({ wardrobe: { wearing: [CAT_EARS] } }), [CAT_EARS])
+  assert.deepEqual(wornItems({ wardrobe: { worn: ['cat-ears'] }, catalog }), [CAT_EARS])
+  assert.deepEqual(wornItems({ wardrobe: { worn: ['ghost'] }, catalog }), [])
+})

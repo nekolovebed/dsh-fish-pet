@@ -9,3 +9,7 @@ Thumbs.db
 # scratch used by the one-off push script
 .ghpush/
 .workbuddy/
+
+# user-supplied packs: keep anything you do not own out of the repository
+packs/local/
+.preview/

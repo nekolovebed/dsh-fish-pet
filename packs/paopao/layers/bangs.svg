@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250" width="200" height="250">
+  <defs>
+    <linearGradient id="bangsGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5F89E9"/>
+      <stop offset="100%" stop-color="#2A4A96"/>
+    </linearGradient>
+  </defs>
+  <path d="M68 92 C68 66 80 55 100 55 C120 55 132 66 132 92 C127 84 121 80 115 78 C111 86 106 90 100 91 C94 92 88 90 84 84 C78 86 72 88 68 92 Z" fill="url(#bangsGrad)"/>
+  <path d="M74 79 C82 66 90 61 100 61" stroke="#A2C1F9" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <path d="M109 62 C117 66 123 72 127 79" stroke="#A2C1F9" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.32"/>
+  <path d="M69 88 C67 96 67 102 69 108 C72 101 73 94 72 88 Z" fill="#2F529F"/>
+  <path d="M131 88 C133 96 133 102 131 108 C128 101 127 94 128 88 Z" fill="#2F529F"/>
+</svg>

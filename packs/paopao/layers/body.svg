@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250" width="200" height="250">
+  <defs>
+    <linearGradient id="dressGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2C4278"/>
+      <stop offset="100%" stop-color="#182746"/>
+    </linearGradient>
+    <linearGradient id="apronGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3B5795"/>
+      <stop offset="100%" stop-color="#273D6B"/>
+    </linearGradient>
+    <linearGradient id="hemGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#DCE6FB"/>
+    </linearGradient>
+  </defs>
+  <path d="M68 138 C66 162 58 190 48 214 L152 214 C142 190 134 162 132 138 Z" fill="url(#dressGrad)"/>
+  <path d="M68 138 C66 162 58 190 48 214 L152 214 C142 190 134 162 132 138 Z" fill="none" stroke="#0F1B33" stroke-width="1" opacity="0.22"/>
+  <path d="M82 158 C80 176 74 194 67 208 L133 208 C126 194 120 176 118 158 Z" fill="url(#apronGrad)"/>
+  <path d="M82 158 C80 176 74 194 67 208" stroke="#5C79B8" stroke-width="1.6" fill="none" opacity="0.7"/>
+  <path d="M118 158 C120 176 126 194 133 208" stroke="#5C79B8" stroke-width="1.6" fill="none" opacity="0.7"/>
+  <path d="M84 158 Q100 165 116 158" stroke="#87A2D8" stroke-width="1.4" fill="none" opacity="0.6"/>
+  <path d="M48 211 L152 211 L153 220 Q100 227 47 220 Z" fill="url(#hemGrad)"/>
+  <path d="M47 220 Q100 227 153 220" stroke="#B9CBEF" stroke-width="1.2" fill="none" opacity="0.8"/>
+  <circle cx="100" cy="170" r="2.6" fill="#F7FAFF"/>
+  <circle cx="100" cy="186" r="2.6" fill="#F7FAFF"/>
+  <circle cx="100" cy="201" r="2.6" fill="#F7FAFF"/>
+  <path d="M74 154 C72 174 66 190 60 202" stroke="#3E5893" stroke-width="1.4" fill="none" opacity="0.35"/>
+  <path d="M126 154 C128 174 134 190 140 202" stroke="#3E5893" stroke-width="1.4" fill="none" opacity="0.35"/>
+  <g fill="#EDF3FF" opacity="0.85">
+    <path d="M64 174 l1.2 2.8 2.8 1.2 -2.8 1.2 -1.2 2.8 -1.2 -2.8 -2.8 -1.2 2.8 -1.2 z"/>
+    <path d="M136 190 l1 2.4 2.4 1 -2.4 1 -1 2.4 -1 -2.4 -2.4 -1 2.4 -1 z" opacity="0.7"/>
+  </g>
+</svg>

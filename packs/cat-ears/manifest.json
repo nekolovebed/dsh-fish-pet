@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "kind": "accessory",
+  "id": "cat-ears",
+  "name": "猫耳",
+  "author": "dsh-fish-pet",
+  "license": "MIT",
+  "description": "一对会跟着脑袋轻轻晃的猫耳。",
+  "slot": "head",
+  "anchor": "head",
+  "offset": [0, 0.02],
+  "pivot": [0.5, 0.9],
+  "scale": 0.46,
+  "z": 40,
+  "motion": "sway",
+  "tags": ["cat", "cute"],
+  "src": "art.svg"
+}

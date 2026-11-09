@@ -59,6 +59,18 @@ export const Config = Schema.object({
   chatCwd: Schema.string().default('')
     .description('桌宠会话的工作目录，留空使用 DSH 进程当前目录'),
 
+  assetsEnabled: Schema.boolean().default(true)
+    .description('启用素材包形象。关闭后回退到内置内联形象（素材出错时的兜底）。'),
+
+  skinId: Schema.string().default('paopao')
+    .description('当前皮肤包 id，对应 packs/<id>/manifest.json'),
+
+  worn: Schema.array(Schema.string()).default([])
+    .description('已穿戴的挂件包 id 列表'),
+
+  packsDir: Schema.string().default('')
+    .description('素材根目录，留空使用插件自带 packs/'),
+
   maxTasks: Schema.number().min(1).max(20).step(1).default(6).role('slider')
     .description('状态面板保留的任务条数'),
 }).description('DSH 页面内的小鱼桌宠')
@@ -79,6 +91,10 @@ export const defaults = Object.freeze({
   chatEnabled: true,
   chatMode: 'session',
   chatCwd: '',
+  assetsEnabled: true,
+  skinId: 'paopao',
+  worn: [],
+  packsDir: '',
   maxTasks: 6,
 })
 
@@ -99,6 +115,12 @@ export function normalizeConfig(input) {
       out[key] = typeof value === 'boolean' ? value : fallback
     } else if (typeof fallback === 'number') {
       out[key] = Number.isFinite(value) ? clampNumber(key, value) : fallback
+    } else if (Array.isArray(fallback)) {
+      // Wear lists arrive from settings files, HTTP patches and tool calls, so
+      // the shape is re-imposed here instead of trusting any of them.
+      out[key] = Array.isArray(value)
+        ? [...new Set(value.filter((item) => typeof item === 'string' && item.trim()).map((item) => item.trim()))].slice(0, 8)
+        : fallback.slice()
     } else if (typeof value === 'string') {
       out[key] = value
     } else {

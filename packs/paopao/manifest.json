@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "kind": "skin",
+  "id": "paopao",
+  "name": "泡泡",
+  "author": "dsh-fish-pet",
+  "license": "MIT",
+  "description": "原创鲸鱼兜帽少女「泡泡」，分层 SVG，随仓库以 MIT 分发。",
+  "canvas": { "width": 200, "height": 250 },
+  "anchors": {
+    "head": [0.5, 0.18],
+    "eyes": [0.5, 0.38],
+    "neck": [0.5, 0.55],
+    "spine": [0.5, 0.45],
+    "hand": [0.28, 0.72],
+    "back": [0.5, 0.5]
+  },
+  "layers": [
+    { "id": "tail", "src": "layers/tail.svg", "z": 5, "pivot": [0.76, 0.8], "motion": "wag" },
+    { "id": "hair-back", "src": "layers/hair-back.svg", "z": 6 },
+    { "id": "legs", "src": "layers/legs.svg", "z": 9 },
+    { "id": "body", "src": "layers/body.svg", "z": 10 },
+    { "id": "arms", "src": "layers/arms.svg", "z": 11 },
+    { "id": "head", "src": "layers/head.svg", "z": 14 },
+    {
+      "id": "eyes",
+      "z": 20,
+      "pivot": [0.5, 0.38],
+      "motion": "blink",
+      "variants": {
+        "open": "layers/eyes-open.svg",
+        "happy": "layers/eyes-happy.svg",
+        "sleep": "layers/eyes-sleep.svg",
+        "star": "layers/eyes-star.svg"
+      }
+    },
+    {
+      "id": "mouth",
+      "z": 21,
+      "variants": {
+        "smile": "layers/mouth-smile.svg",
+        "open": "layers/mouth-open.svg",
+        "flat": "layers/mouth-flat.svg"
+      }
+    },
+    { "id": "blush", "src": "layers/blush.svg", "z": 22 },
+    { "id": "bangs", "src": "layers/bangs.svg", "z": 24 },
+    { "id": "hood", "src": "layers/hood.svg", "z": 30 },
+    { "id": "hood-trim", "src": "layers/hood-trim.svg", "z": 31 }
+  ],
+  "expressions": {
+    "IDLE": { "eyes": "open", "mouth": "smile" },
+    "THINKING": { "eyes": "open", "mouth": "flat" },
+    "WORKING": { "eyes": "open", "mouth": "open" },
+    "WAITING": { "eyes": "star", "mouth": "flat" },
+    "SUCCESS": { "eyes": "happy", "mouth": "open" },
+    "ERROR": { "eyes": "sleep", "mouth": "flat" },
+    "SLEEP": { "eyes": "sleep", "mouth": "flat" },
+    "SHY": { "eyes": "happy", "mouth": "smile" }
+  },
+  "accessoryOverrides": {
+    "cat-ears": { "scale": 0.3, "offset": [0, 0] },
+    "ribbon": { "scale": 0.2, "offset": [0, 0.02] },
+    "round-glasses": { "scale": 0.34, "offset": [0, 0] },
+    "cape": { "scale": 0.56, "offset": [0, 0] }
+  }
+}

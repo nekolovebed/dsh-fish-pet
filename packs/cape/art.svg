@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 80" width="140" height="80">
+  <defs>
+    <linearGradient id="capeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8FD9B8"/>
+      <stop offset="100%" stop-color="#4E9E7B"/>
+    </linearGradient>
+  </defs>
+  <path d="M70 4 C100 4 124 16 134 34 L128 72 Q70 88 12 72 L6 34 C16 16 40 4 70 4 Z" fill="url(#capeGrad)"/>
+  <path d="M54 9 Q70 20 86 9" stroke="#3F8A69" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="0.55"/>
+  <path d="M70 6 L70 78" stroke="#3F8A69" stroke-width="1" opacity="0.28"/>
+  <path d="M14 66 Q70 80 126 66" stroke="#ABE4CB" stroke-width="1.6" fill="none" opacity="0.5"/>
+</svg>

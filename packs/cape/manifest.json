@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "kind": "accessory",
+  "id": "cape",
+  "name": "小披风",
+  "author": "dsh-fish-pet",
+  "license": "MIT",
+  "description": "一件薄荷绿的小披风，从背后披下来。",
+  "slot": "back",
+  "anchor": "spine",
+  "offset": [0, 0],
+  "pivot": [0.5, 0.1],
+  "scale": 0.8,
+  "z": 6,
+  "motion": "none",
+  "tags": ["warm", "cozy"],
+  "src": "art.svg"
+}

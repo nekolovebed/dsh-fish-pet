@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "kind": "accessory",
+  "id": "ribbon",
+  "name": "蝴蝶结",
+  "author": "dsh-fish-pet",
+  "license": "MIT",
+  "description": "颈间的粉色蝴蝶结，尾巴会跟着轻轻摆。",
+  "slot": "neck",
+  "anchor": "neck",
+  "offset": [0, 0.05],
+  "pivot": [0.5, 0.5],
+  "scale": 0.28,
+  "z": 35,
+  "motion": "sway",
+  "tags": ["formal", "cute"],
+  "src": "art.svg"
+}

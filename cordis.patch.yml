@@ -18,4 +18,8 @@
         chatEnabled: true
         chatMode: session
         chatCwd: ''
+        assetsEnabled: true
+        skinId: paopao
+        worn: []
+        packsDir: ''
         maxTasks: 6

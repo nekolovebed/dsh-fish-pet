@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250" width="200" height="250">
+  <defs>
+    <linearGradient id="sleeveGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3A5590"/>
+      <stop offset="100%" stop-color="#22345C"/>
+    </linearGradient>
+  </defs>
+  <path d="M70 148 C58 158 50 176 52 194 C60 188 66 168 72 154 Z" fill="url(#sleeveGrad)"/>
+  <path d="M130 148 C142 158 150 176 148 194 C140 188 134 168 128 154 Z" fill="url(#sleeveGrad)"/>
+  <path d="M52 192 Q52 200 59 200 Q65 200 65 192 Z" fill="#FFE7D8"/>
+  <path d="M148 192 Q148 200 141 200 Q135 200 135 192 Z" fill="#FFE7D8"/>
+  <path d="M54 194 Q58 197 62 195" stroke="#F2C6B4" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <path d="M146 194 Q142 197 138 195" stroke="#F2C6B4" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <path d="M68 154 C62 166 57 178 56 190" stroke="#4E6BA8" stroke-width="1.3" fill="none" opacity="0.5"/>
+  <path d="M132 154 C138 166 143 178 144 190" stroke="#4E6BA8" stroke-width="1.3" fill="none" opacity="0.5"/>
+</svg>

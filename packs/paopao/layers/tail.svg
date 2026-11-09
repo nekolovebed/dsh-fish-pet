@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250" width="200" height="250">
+  <defs>
+    <linearGradient id="tailGrad" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#6E9BF0"/>
+      <stop offset="100%" stop-color="#2C51AB"/>
+    </linearGradient>
+  </defs>
+  <path d="M146 212 C162 202 178 198 194 202 C188 210 174 216 158 220 C174 224 186 232 190 244 C178 244 160 234 148 224 Z" fill="url(#tailGrad)"/>
+  <path d="M152 210 C164 203 175 199 186 201" stroke="#A8C4FA" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.55"/>
+  <path d="M154 224 C165 229 174 235 180 243" stroke="#1F3E85" stroke-width="1.6" fill="none" stroke-linecap="round" opacity="0.4"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250" width="200" height="250">
+  <defs>
+    <linearGradient id="hairBackGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3A62BC"/>
+      <stop offset="100%" stop-color="#213F7C"/>
+    </linearGradient>
+  </defs>
+  <path d="M60 134 C52 96 60 54 100 50 C140 54 148 96 140 134 C134 120 120 112 100 112 C80 112 66 120 60 134 Z" fill="url(#hairBackGrad)"/>
+  <path d="M61 118 C58 128 59 136 63 140 C67 134 68 126 67 118 Z" fill="#213F7C"/>
+  <path d="M139 118 C142 128 141 136 137 140 C133 134 132 126 133 118 Z" fill="#213F7C"/>
+</svg>

@@ -9,11 +9,32 @@ maintainers of any desktop-pet plugin for DeepSeek Harness.
 | Component | Origin | Rights |
 | --- | --- | --- |
 | All source code in `src/`, `lib/`, `test/` | Written for this project | MIT (see `LICENSE`) |
-| Built-in character “泡泡” (the whale-like drawing in `lib/client.js`, `FishArt`) | Drawn for this project as inline SVG | MIT |
-| Colour palette, animations, layout, state machine | Written for this project | MIT |
+| Built-in character “泡泡” (layered SVG in `packs/paopao/`) | Drawn for this project | MIT |
+| Example accessories in `packs/cat-ears`, `packs/ribbon`, `packs/round-glasses`, `packs/cape` | Drawn for this project | MIT |
+| Colour palette, animations, layout, state machine, pack format | Written for this project | MIT |
 
 **No third-party character art, sprite sheet, animation frame, icon, sound or
 font is bundled in this repository.**
+
+Asset packs supplied by a user belong to whoever supplied them. The plugin only
+reads them from a local directory; `packs/local/` is excluded from version
+control so private or third-party artwork does not end up in this repository.
+
+## 1a. The “大肥鱼” character (not bundled)
+
+The whale-girl character is **not** part of this repository. Its rights status
+was clarified by the original authors:
+
+| Item | Rights |
+| --- | --- |
+| Original character 「溟月」 by 上善无形 (Bilibili) | Released for derivative work under **CC BY-NC-SA 4.0** on 2026-08-02 |
+| DeepSeek maid version by ZipZipPipe (Bilibili) | Same licence; commercial use explicitly prohibited |
+| Animation assets from `PC2005-cloud/dsh-pet` | Code MIT; character under CC BY-NC-SA 4.0 |
+
+CC BY-NC-SA requires attribution, forbids commercial use, and forces derivative
+works to be shared under the same licence. That is incompatible with this
+repository's MIT grant, so the pack lives in `packs/local/` (git-ignored) and is
+created by the user. See `docs/LEGAL.md` §1.3 and §6 path B.
 
 ## 2. What was *not* copied
 

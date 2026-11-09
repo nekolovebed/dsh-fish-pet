@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250" width="200" height="250">
+  <defs>
+    <linearGradient id="hoodGrad" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0%" stop-color="#8CB4F8"/>
+      <stop offset="55%" stop-color="#4E7AD6"/>
+      <stop offset="100%" stop-color="#2B4C99"/>
+    </linearGradient>
+  </defs>
+  <path fill-rule="evenodd" fill="url(#hoodGrad)"
+        d="M54 142 C44 122 44 72 56 48 C68 26 84 18 100 18 C116 18 132 26 144 48 C156 72 156 122 146 142 C128 149 72 149 54 142 Z
+           M70 88 A30 33 0 1 0 130 88 A30 33 0 1 0 70 88 Z"/>
+  <path d="M60 124 C54 100 54 76 64 56" stroke="#BBD2FB" stroke-width="2.6" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <path d="M140 124 C146 100 146 78 136 58" stroke="#1E3A7C" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.28"/>
+  <path d="M56 140 C76 146 124 146 144 140" stroke="#24438A" stroke-width="2" fill="none" opacity="0.3"/>
+</svg>
