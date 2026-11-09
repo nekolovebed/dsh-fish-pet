@@ -103,7 +103,7 @@ function fakeClientContext() {
 
 test('the bundle registers an overlay and a settings card', () => {
   const { mod } = loadClient()
-  assert.equal(mod.name, 'dsh-fish-pet-client')
+  assert.equal(mod.name, 'dsh-neko-pet-client')
   assert.deepEqual(mod.inject, ['slots'])
 
   const ctx = fakeClientContext()
@@ -188,7 +188,7 @@ test('a broken loader is reported instead of thrown', () => {
   } finally {
     console.error = original
   }
-  assert.ok(errors.some((line) => line.includes('dsh-fish-pet')))
+  assert.ok(errors.some((line) => line.includes('dsh-neko-pet')))
 })
 
 // ---------------------------------------------------------------------------

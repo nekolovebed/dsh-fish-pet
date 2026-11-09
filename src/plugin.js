@@ -28,31 +28,31 @@ import { registerPetTools } from './tools.js'
 export { Config, NAMESPACE }
 
 /**
- * Opt-in file trace: `DSH_FISH_PET_TRACE=/path/to/trace.log`.
+ * Opt-in file trace: `DSH_NEKO_PET_TRACE=/path/to/trace.log`.
  *
  * Console output from inside a plugin is not reliably visible during DSH boot
  * (the console exporter attaches late), so loading problems are much faster to
  * diagnose by appending to a file the operator names explicitly. Off by
  * default; costs one env lookup when unset.
  */
-const TRACE_PATH = process.env.DSH_FISH_PET_TRACE || ''
+const TRACE_PATH = process.env.DSH_NEKO_PET_TRACE || ''
 function trace(note) {
   if (!TRACE_PATH) return
   try {
-    appendFileSync(TRACE_PATH, `[dsh-fish-pet] ${new Date().toISOString()} ${note}\n`)
+    appendFileSync(TRACE_PATH, `[dsh-neko-pet] ${new Date().toISOString()} ${note}\n`)
   } catch {}
 }
 
-const STREAM_ENDPOINT = '/plugins/dsh-fish-pet/stream'
-const CONFIG_ENDPOINT = '/plugins/dsh-fish-pet/config'
-const CHAT_ENDPOINT = '/plugins/dsh-fish-pet/chat'
-const STATUS_ENDPOINT = '/plugins/dsh-fish-pet/status'
-const BALANCE_REFRESH_ENDPOINT = '/plugins/dsh-fish-pet/balance'
-const PACKS_ENDPOINT = '/plugins/dsh-fish-pet/packs'
-const ASSET_ENDPOINT = '/plugins/dsh-fish-pet/asset'
-const DESKTOP_ENDPOINT = '/plugins/dsh-fish-pet/desktop'
-const DESKTOP_SCRIPT = '/plugins/dsh-fish-pet/desktop.js'
-const SAY_ENDPOINT = '/plugins/dsh-fish-pet/say'
+const STREAM_ENDPOINT = '/plugins/dsh-neko-pet/stream'
+const CONFIG_ENDPOINT = '/plugins/dsh-neko-pet/config'
+const CHAT_ENDPOINT = '/plugins/dsh-neko-pet/chat'
+const STATUS_ENDPOINT = '/plugins/dsh-neko-pet/status'
+const BALANCE_REFRESH_ENDPOINT = '/plugins/dsh-neko-pet/balance'
+const PACKS_ENDPOINT = '/plugins/dsh-neko-pet/packs'
+const ASSET_ENDPOINT = '/plugins/dsh-neko-pet/asset'
+const DESKTOP_ENDPOINT = '/plugins/dsh-neko-pet/desktop'
+const DESKTOP_SCRIPT = '/plugins/dsh-neko-pet/desktop.js'
+const SAY_ENDPOINT = '/plugins/dsh-neko-pet/say'
 
 export const endpoints = {
   stream: STREAM_ENDPOINT,
@@ -186,7 +186,7 @@ export function apply(ctx, config = {}) {
     const detail = error instanceof Error ? error.message : String(error)
     trace(`mount threw: ${detail}`)
     try {
-      (ctx.logger ?? console).error(`[dsh-fish-pet] 激活失败，本次启动停用桌宠（不影响 DSH）: ${detail}`)
+      (ctx.logger ?? console).error(`[dsh-neko-pet] 激活失败，本次启动停用桌宠（不影响 DSH）: ${detail}`)
     } catch {}
   }
 }
@@ -205,7 +205,7 @@ function mount(ctx, config) {
     settings = ctx.settings?.register?.(NAMESPACE, Config, { base, applies: 'live' }) ?? memoryScope(base)
   } catch (error) {
     trace(`settings.register failed: ${error instanceof Error ? error.message : String(error)}`)
-    logger.warn?.(`[dsh-fish-pet] 设置命名空间注册失败，改用内存配置: ${error instanceof Error ? error.message : String(error)}`)
+    logger.warn?.(`[dsh-neko-pet] 设置命名空间注册失败，改用内存配置: ${error instanceof Error ? error.message : String(error)}`)
     settings = memoryScope(base)
   }
   trace(`settings ready; scope=${typeof settings.get}`)
@@ -218,7 +218,7 @@ function mount(ctx, config) {
     ctx,
     config: () => settings.get(),
     emit: (payload) => stream.broadcast(payload),
-    warn: (note, error) => logger.warn?.(`[dsh-fish-pet] ${note}`, error),
+    warn: (note, error) => logger.warn?.(`[dsh-neko-pet] ${note}`, error),
   })
 
   // Asset packs are read from disk once at mount, then re-scanned on demand.
@@ -328,7 +328,7 @@ function mount(ctx, config) {
       for (const payload of chat.observe(session, event)) send(payload)
     } catch (error) {
       // A throw here would stop every other subscriber on the shared bus.
-      logger.error?.('[dsh-fish-pet] 处理会话事件失败', error)
+      logger.error?.('[dsh-neko-pet] 处理会话事件失败', error)
     }
   }, { global: true })
 
@@ -336,7 +336,7 @@ function mount(ctx, config) {
     try {
       for (const payload of tracker.disposeSession(session)) send(payload)
     } catch (error) {
-      logger.error?.('[dsh-fish-pet] 清理会话失败', error)
+      logger.error?.('[dsh-neko-pet] 清理会话失败', error)
     }
   }, { global: true })
 
@@ -362,7 +362,7 @@ function mount(ctx, config) {
       send(tracker.usageMessage(next))
       send(wardrobePayload())
     } catch (error) {
-      logger.error?.('[dsh-fish-pet] 应用设置失败', error)
+      logger.error?.('[dsh-neko-pet] 应用设置失败', error)
     }
   })
 
@@ -375,7 +375,7 @@ function mount(ctx, config) {
       try {
         httpCtx.effect(() => server.register({ kind: 'exact', path, handler }), label)
       } catch (error) {
-        logger.warn?.(`[dsh-fish-pet] 注册 ${path} 失败: ${error instanceof Error ? error.message : String(error)}`)
+        logger.warn?.(`[dsh-neko-pet] 注册 ${path} 失败: ${error instanceof Error ? error.message : String(error)}`)
       }
     }
 
@@ -390,7 +390,7 @@ function mount(ctx, config) {
       res.write('retry: 2000\n\n')
       const config = settings.get()
       const seed = [
-        envelope(Kind.HELLO, { plugin: 'dsh-fish-pet', config, catalog: packs.catalog() }),
+        envelope(Kind.HELLO, { plugin: 'dsh-neko-pet', config, catalog: packs.catalog() }),
         ...tracker.snapshot(config).map(decorate),
         balancePayload(),
         wardrobePayload(),
@@ -400,7 +400,7 @@ function mount(ctx, config) {
       ]
       const remove = stream.add(res, seed)
       req.on('close', remove)
-    }, 'dsh-fish-pet: event stream')
+    }, 'dsh-neko-pet: event stream')
 
     route(CONFIG_ENDPOINT, async (req, res) => {
       if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
@@ -411,7 +411,7 @@ function mount(ctx, config) {
         const unknown = Object.keys(patch).filter((key) => !writableKeys.has(key))
         if (unknown.length > 0) return json(res, 400, { error: `未知设置项: ${unknown.join(', ')}` })
         const next = await patchConfig(patch)
-        logger.info?.(`[dsh-fish-pet] 设置已更新 (${Object.keys(patch).join(', ')})`)
+        logger.info?.(`[dsh-neko-pet] 设置已更新 (${Object.keys(patch).join(', ')})`)
         if (Object.prototype.hasOwnProperty.call(patch, 'showBalance')
           || Object.prototype.hasOwnProperty.call(patch, 'balanceProvider')
           || Object.prototype.hasOwnProperty.call(patch, 'balanceApiKey')
@@ -422,7 +422,7 @@ function mount(ctx, config) {
       } catch (error) {
         return json(res, 400, { error: error instanceof Error ? error.message : String(error) })
       }
-    }, 'dsh-fish-pet: settings endpoint')
+    }, 'dsh-neko-pet: settings endpoint')
 
     route(STATUS_ENDPOINT, (req, res) => {
       if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
@@ -439,7 +439,7 @@ function mount(ctx, config) {
         packs: { root: packs.root, skins: packs.skins.size, accessories: packs.accessories.size, errors: packs.errors },
         chatReady: chat.ready || settings.get().chatEnabled,
       })
-    }, 'dsh-fish-pet: status endpoint')
+    }, 'dsh-neko-pet: status endpoint')
 
     // Catalog for the browser and for anyone poking the API by hand.
     route(PACKS_ENDPOINT, (req, res) => {
@@ -451,7 +451,7 @@ function mount(ctx, config) {
       if (req.method !== 'GET') return json(res, 405, { error: 'method not allowed' })
       packs.reload()
       return json(res, 200, packs.catalog())
-    }, 'dsh-fish-pet: pack catalog')
+    }, 'dsh-neko-pet: pack catalog')
 
     /**
      * Asset bytes, by query rather than by path: the host route contract only
@@ -496,13 +496,13 @@ function mount(ctx, config) {
         } catch {}
       })
       stream_.pipe(res)
-    }, 'dsh-fish-pet: pack asset')
+    }, 'dsh-neko-pet: pack asset')
 
     route(BALANCE_REFRESH_ENDPOINT, async (req, res) => {
       if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
       if (req.method !== 'POST' && req.method !== 'GET') return json(res, 405, { error: 'method not allowed' })
       json(res, 200, await refreshBalance())
-    }, 'dsh-fish-pet: balance refresh')
+    }, 'dsh-neko-pet: balance refresh')
 
     route(DESKTOP_SCRIPT, (req, res) => {
       if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
@@ -517,7 +517,7 @@ function mount(ctx, config) {
       } catch {
         return json(res, 500, { error: 'desktop script missing' })
       }
-    }, 'dsh-fish-pet: desktop script')
+    }, 'dsh-neko-pet: desktop script')
 
     // The overlay window loads this exact URL; POST controls its lifecycle.
     // The page URL keeps DSH's session token, which is also injected into the
@@ -565,7 +565,7 @@ function mount(ctx, config) {
         return json(res, 200, desktop.status())
       }
       return json(res, 200, desktop.status())
-    }, 'dsh-fish-pet: desktop window')
+    }, 'dsh-neko-pet: desktop window')
 
     /**
      * A plain HTTP door into the speech bubble, for agents or scripts that do
@@ -585,7 +585,7 @@ function mount(ctx, config) {
       } catch (error) {
         return json(res, 400, { error: error instanceof Error ? error.message : String(error) })
       }
-    }, 'dsh-fish-pet: speech bubble')
+    }, 'dsh-neko-pet: speech bubble')
 
     route(CHAT_ENDPOINT, async (req, res) => {
       if (!isLocalRequest(req)) return json(res, 403, { error: 'local access only' })
@@ -598,7 +598,7 @@ function mount(ctx, config) {
       } catch (error) {
         return json(res, 400, { error: error instanceof Error ? error.message : String(error) })
       }
-    }, 'dsh-fish-pet: chat endpoint')
+    }, 'dsh-neko-pet: chat endpoint')
   }
 
   try {
@@ -611,7 +611,7 @@ function mount(ctx, config) {
     }
   } catch (error) {
     trace(`inject failed: ${error instanceof Error ? error.message : String(error)}`)
-    logger.warn?.(`[dsh-fish-pet] 无法注册 HTTP 路由: ${error instanceof Error ? error.message : String(error)}`)
+    logger.warn?.(`[dsh-neko-pet] 无法注册 HTTP 路由: ${error instanceof Error ? error.message : String(error)}`)
   }
 
   // --- agent surface -------------------------------------------------------
@@ -632,19 +632,19 @@ function mount(ctx, config) {
           say,
           reloadPacks,
         }, {
-          warn: (note) => logger.warn?.(`[dsh-fish-pet] ${note}`),
+          warn: (note) => logger.warn?.(`[dsh-neko-pet] ${note}`),
         })
         trace('pet tools registered')
       } catch (error) {
         trace(`tools registration threw: ${error instanceof Error ? error.message : String(error)}`)
-        logger.warn?.('[dsh-fish-pet] Agent 工具注册失败', error)
+        logger.warn?.('[dsh-neko-pet] Agent 工具注册失败', error)
       }
     }
     if (typeof ctx.inject === 'function') ctx.inject(['tools'], registerTools)
     else registerTools(ctx)
   } catch (error) {
     trace(`tools inject failed: ${error instanceof Error ? error.message : String(error)}`)
-    logger.warn?.('[dsh-fish-pet] 无法接入 Agent 工具（桌宠显示不受影响）')
+    logger.warn?.('[dsh-neko-pet] 无法接入 Agent 工具（桌宠显示不受影响）')
   }
 
   // --- skill: teach the agent when to use the pet --------------------------
@@ -687,7 +687,7 @@ function mount(ctx, config) {
         trace('desk-pet skill registered')
       } catch (error) {
         trace(`skill registration threw: ${error instanceof Error ? error.message : String(error)}`)
-        logger.warn?.('[dsh-fish-pet] skill 注册失败（Agent 指引不可用，工具不受影响）', error)
+        logger.warn?.('[dsh-neko-pet] skill 注册失败（Agent 指引不可用，工具不受影响）', error)
       }
     }
     if (typeof ctx.inject === 'function') ctx.inject(['skills'], registerSkill)
@@ -714,12 +714,12 @@ function mount(ctx, config) {
       say.dispose()
       desktop.close()
     } catch (error) {
-      logger.error?.('[dsh-fish-pet] 清理失败', error)
+      logger.error?.('[dsh-neko-pet] 清理失败', error)
     }
     void chat.dispose()
   })
 
-  logger.info?.('[dsh-fish-pet] 桌宠已就绪')
+  logger.info?.('[dsh-neko-pet] 桌宠已就绪')
 }
 
 export { defaults, normalizeConfig }

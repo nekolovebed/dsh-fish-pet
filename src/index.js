@@ -15,18 +15,18 @@ try {
 } catch (error) {
   const detail = error instanceof Error ? error.message : String(error)
   console.error(
-    '[dsh-fish-pet] 依赖加载失败，桌宠本次启动已自动停用（不影响 DSH 与其它插件）。\n'
-    + `[dsh-fish-pet] 原因: ${detail}\n`
-    + '[dsh-fish-pet] 修复: 退出 DSH 后重新安装 `dsh plugin --profile web add <本仓库地址>`，或补齐依赖后重启。',
+    '[dsh-neko-pet] 依赖加载失败，桌宠本次启动已自动停用（不影响 DSH 与其它插件）。\n'
+    + `[dsh-neko-pet] 原因: ${detail}\n`
+    + '[dsh-neko-pet] 修复: 退出 DSH 后重新安装 `dsh plugin --profile web add <本仓库地址>`，或补齐依赖后重启。',
   )
   impl = {
-    NAMESPACE: 'dsh-fish-pet',
+    NAMESPACE: 'dsh-neko-pet',
     Config: undefined,
     apply() {},
   }
 }
 
-export const name = 'dsh-fish-pet'
+export const name = 'dsh-neko-pet'
 export const inject = ['sessions', 'settings']
 export const Config = impl.Config
 

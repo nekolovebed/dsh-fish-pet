@@ -1,4 +1,4 @@
-# dsh-fish-pet
+# dsh-neko-pet
 
 一只住在 **DeepSeek Harness** 页面里的小鱼。它跟着你的任务变表情，把余额、用量和任务清单摊在面板上，还能替你去干活——因为它的对话框接的是**真实的 DSH 会话**，不是另一个 LLM 客户端。
 
@@ -26,7 +26,7 @@
 
 **换得了装。** 形象是**素材包**：一个目录 + 一份 `manifest.json` 描述分件、锚点与表情，不用改代码。静态立绘常驻、表情特效层按姿态切换、动画片段只在动作触发时短播；猫耳、眼镜、披风这类挂件按槽位吸附，戴上就跟着身体一起动；模型也能读到你新放进来的挂件并主动给它戴上。
 
-**听得懂话，也会搭话。** 五个 agent 工具：`pet_status` 读状态与素材目录、`pet_act` 做动作（挥手、跳、转圈、跳舞、打盹……，可带台词）、`pet_say` 让它在头顶气泡里说一句话、`pet_wear` 穿脱、`pet_skin` 换皮肤。想绕开工具注册表也可以直接 `POST /plugins/dsh-fish-pet/say`。模型调用时，面板上会显示「摆弄自己」。
+**听得懂话，也会搭话。** 五个 agent 工具：`pet_status` 读状态与素材目录、`pet_act` 做动作（挥手、跳、转圈、跳舞、打盹……，可带台词）、`pet_say` 让它在头顶气泡里说一句话、`pet_wear` 穿脱、`pet_skin` 换皮肤。想绕开工具注册表也可以直接 `POST /plugins/dsh-neko-pet/say`。模型调用时，面板上会显示「摆弄自己」。
 
 **跳得出窗口。** DSH 桌面版可在设置里开一个透明置顶的独立小窗，桌宠显示在浏览器窗口之外；宠物与气泡区域可拖动、可关闭，其余透明区域点击穿透。纯 Node 的 `dsh web` 没有 Electron，会自动降级成页面内桌宠。
 
@@ -38,7 +38,7 @@
 npm install
 dsh plugin --profile web add D:/MyProject/DSH-PET
 # 或从 GitHub：
-# dsh plugin --profile web add git+https://github.com/nekolovebed/dsh-fish-pet.git
+# dsh plugin --profile web add git+https://github.com/nekolovebed/dsh-neko-pet.git
 ```
 
 **装完必须完全退出 DSH 再启动。**
@@ -103,7 +103,7 @@ packs/            素材包：内置原创皮肤「泡泡」与四个示例挂�
 # 脚本侧（不经过工具注册表）：
 curl -X POST -H 'content-type: application/json' \
   -d '{"text":"报告写完啦","durationMs":6000}' \
-  http://127.0.0.1:3080/plugins/dsh-fish-pet/say
+  http://127.0.0.1:3080/plugins/dsh-neko-pet/say
 ```
 
 气泡是一个贴在头顶的简单圆角框。优先级：`pet_say` > `pet_act` 的台词 > 最近一句对话 > 当前会话阶段；到期自动消失。
@@ -148,7 +148,7 @@ curl -X POST -H 'content-type: application/json' \
 npm install
 npm test                 # 89 个测试，无网络依赖
 node --check lib/client.js
-DSH_FISH_PET_TRACE=D:/tmp/fish.log dsh --profile web   # 带追踪启动
+DSH_NEKO_PET_TRACE=D:/tmp/fish.log dsh --profile web   # 带追踪启动
 ```
 
 改 `lib/client.js` 后硬刷新页面（`Ctrl+Shift+R`）；改宿主半区需重启 DSH；**只改 `packs/` 里的素材不用重启**，在设置卡片点「重新扫描」即可。

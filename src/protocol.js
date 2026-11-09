@@ -6,7 +6,7 @@
  * DSH page. Any change here must be mirrored there.
  */
 
-/** Message kinds pushed over `/plugins/dsh-fish-pet/stream`. */
+/** Message kinds pushed over `/plugins/dsh-neko-pet/stream`. */
 export const Kind = {
   /** Sent once on connect: plugin metadata so the client can show versions. */
   HELLO: 'hello',

@@ -8,7 +8,7 @@
  */
 import Schema from '@deepseek-ai/schemastery'
 
-export const NAMESPACE = 'dsh-fish-pet'
+export const NAMESPACE = 'dsh-neko-pet'
 
 export const Config = Schema.object({
   enabled: Schema.boolean().default(true)

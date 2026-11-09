@@ -23,7 +23,7 @@ import { MOTIONS, SLOTS, SLOT_Z } from './protocol.js'
 /** `packs/` next to the package root — the built-in, MIT-licensed artwork. */
 export const DEFAULT_PACKS_ROOT = fileURLToPath(new URL('../packs/', import.meta.url))
 
-export const ASSET_ROUTE = '/plugins/dsh-fish-pet/asset'
+export const ASSET_ROUTE = '/plugins/dsh-neko-pet/asset'
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 const REL_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,255}$/

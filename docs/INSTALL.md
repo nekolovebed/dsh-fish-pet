@@ -30,7 +30,7 @@ dsh plugin --profile web add D:/MyProject/DSH-PET
 ### 方式 B：从 GitHub 安装
 
 ```bash
-dsh plugin --profile web add git+https://github.com/nekolovebed/dsh-fish-pet.git
+dsh plugin --profile web add git+https://github.com/nekolovebed/dsh-neko-pet.git
 ```
 
 插件**不需要构建**：`lib/` 下都是手写的成品（`client.js`、`desktop.html`、`desktop.js`），没有 `prepare` 脚本，pnpm 拉下来即可用。桌面悬浮窗的两个文件也通过 `package.json` 的 `files: ["lib/"]` 一起分发。
@@ -45,28 +45,28 @@ dsh plugin --profile web add git+https://github.com/nekolovebed/dsh-fish-pet.git
 
 ```bash
 # ① 插件行是否进入组合树
-dsh --profile web --dump-config | grep -A3 dsh-fish-pet
+dsh --profile web --dump-config | grep -A3 dsh-neko-pet
 ```
 
 应能看到：
 
 ```yaml
-- id: dsh-fish-pet
-  name: dsh-fish-pet
+- id: dsh-neko-pet
+  name: dsh-neko-pet
   config:
     enabled: true
 ```
 
 ```bash
 # ② 宿主路由是否起来（把端口换成你的实际端口）
-curl http://127.0.0.1:3080/plugins/dsh-fish-pet/status
+curl http://127.0.0.1:3080/plugins/dsh-neko-pet/status
 ```
 
 应返回一段包含 `"pose":"IDLE"` 的 JSON。
 
 ```bash
 # ③ 客户端包是否分发
-curl -o /dev/null -w "%{http_code} %{size_download}\n" http://127.0.0.1:3080/plugins/dsh-fish-pet/client.js
+curl -o /dev/null -w "%{http_code} %{size_download}\n" http://127.0.0.1:3080/plugins/dsh-neko-pet/client.js
 ```
 
 应为 `200` 且约 55 KB。
@@ -80,7 +80,7 @@ curl -o /dev/null -w "%{http_code} %{size_download}\n" http://127.0.0.1:3080/plu
 两条入口，改的是同一份配置（存在 DSH settings 里，重启不丢）：
 
 - **设置 → 插件 → 小鱼桌宠**（推荐）
-- 直接改 `cordis.patch.yml` 里 `dsh-fish-pet` 行的 `config`（改完需重启）
+- 直接改 `cordis.patch.yml` 里 `dsh-neko-pet` 行的 `config`（改完需重启）
 
 | 字段 | 默认 | 说明 |
 | --- | --- | --- |
@@ -113,9 +113,9 @@ curl -o /dev/null -w "%{http_code} %{size_download}\n" http://127.0.0.1:3080/plu
 ```bash
 curl -X POST -H 'content-type: application/json' \
   -d '{"text":"报告写完啦","durationMs":6000}' \
-  http://127.0.0.1:3080/plugins/dsh-fish-pet/say
-curl http://127.0.0.1:3080/plugins/dsh-fish-pet/say     # 读当前气泡
-curl -X DELETE http://127.0.0.1:3080/plugins/dsh-fish-pet/say  # 提前清空
+  http://127.0.0.1:3080/plugins/dsh-neko-pet/say
+curl http://127.0.0.1:3080/plugins/dsh-neko-pet/say     # 读当前气泡
+curl -X DELETE http://127.0.0.1:3080/plugins/dsh-neko-pet/say  # 提前清空
 ```
 
 ### 窗口外悬浮窗
@@ -150,7 +150,7 @@ curl -X DELETE http://127.0.0.1:3080/plugins/dsh-fish-pet/say  # 提前清空
 插件内置文件级追踪。启动 DSH 时带上环境变量，它会把每一步写到文件里：
 
 ```bash
-DSH_FISH_PET_TRACE=D:/tmp/fish.log dsh --profile web
+DSH_NEKO_PET_TRACE=D:/tmp/fish.log dsh --profile web
 ```
 
 正常应看到：
@@ -170,27 +170,27 @@ registerRoutes fired; webServer=object register=function
 
 | 现象 | 原因与处理 |
 | --- | --- |
-| 右下角没有鱼 | ① 设置里 `enabled` 是否为开；② `scale` 是否被调到极小；③ 硬刷新页面（`Ctrl+Shift+R`）；④ 确认 `/plugins/dsh-fish-pet/client.js` 返回 200 |
-| 设置里没有「小鱼桌宠」卡片 | 客户端半区没挂上。看浏览器控制台是否有 `[dsh-fish-pet]` 报错；确认 `package.json` 的 `exports["./client"]` 未被改坏 |
-| 卡片显示「设置尚未连接到 DSH Host」 | 宿主半区没起来。开 `DSH_FISH_PET_TRACE` 看 `mount threw` 的内容 |
+| 右下角没有鱼 | ① 设置里 `enabled` 是否为开；② `scale` 是否被调到极小；③ 硬刷新页面（`Ctrl+Shift+R`）；④ 确认 `/plugins/dsh-neko-pet/client.js` 返回 200 |
+| 设置里没有「小鱼桌宠」卡片 | 客户端半区没挂上。看浏览器控制台是否有 `[dsh-neko-pet]` 报错；确认 `package.json` 的 `exports["./client"]` 未被改坏 |
+| 卡片显示「设置尚未连接到 DSH Host」 | 宿主半区没起来。开 `DSH_NEKO_PET_TRACE` 看 `mount threw` 的内容 |
 | 余额一直 `—` | 预期行为。配置密钥或自定义接口后点面板上的「刷新」 |
 | 对话提示「没有提供 agents 服务」 | 当前组合里没有 `ctx.agents`。确认 profile 包含 `@deepseek-ai/dsh-base` |
 | 对话回复「缺少模型凭据」之类 | 该 profile 没有配置模型。到 DSH 设置里配好模型与 Key |
 | 插件装了但完全没反应 | 开追踪。最常见的两种原因：`inject` 里少声明了服务（Cordis 会抛 `cannot get property … without inject`，而该异常可能被兜底 catch 吞掉），或入口路径写成了非 `file://` 形式 |
-| 素材包里看不到新皮肤/挂件 | ① 目录名是否等于 `manifest.id`；② `manifest.json` 是否在包根目录；③ 设置卡片点「重新扫描」；④ `curl /plugins/dsh-fish-pet/packs` 看 `errors` 里的原因 |
+| 素材包里看不到新皮肤/挂件 | ① 目录名是否等于 `manifest.id`；② `manifest.json` 是否在包根目录；③ 设置卡片点「重新扫描」；④ `curl /plugins/dsh-neko-pet/packs` 看 `errors` 里的原因 |
 | 挂件戴上了但看不见 | 检查 `anchor` 是否为皮肤 `anchors` 里存在的名字；`z` 太小会被身体盖住；`scale` 是否接近 0 |
 | 模型不知道有桌宠工具 | 该 profile 没有 `ctx.tools`，或组合里没有工具注册表。`pet_*` 只在有 tools 服务时注册，桌宠显示不受影响 |
 | 悬浮窗按钮显示「当前环境不支持」 | 你开的是 `dsh web`（纯 Node）。换成 DSH 桌面版；页面内桌宠不受影响 |
-| 悬浮窗打开后是空白 | 看 `DSH_FISH_PET_TRACE` 里有没有 `desktop window load failed`。多数是 session token 没带过去，确认 Web UI 的 URL 带 `?token=` |
+| 悬浮窗打开后是空白 | 看 `DSH_NEKO_PET_TRACE` 里有没有 `desktop window load failed`。多数是 session token 没带过去，确认 Web UI 的 URL 带 `?token=` |
 | 桌宠一直像在循环放视频 | 这是「全动画」皮肤。按 [ASSET-GUIDE.md](ASSET-GUIDE.md) §6 改成静态立绘 + `fx` 层 + `clipVariants`，动画只在动作时短播 |
 
 ### 完全卸载
 
 ```bash
-dsh plugin --profile web remove dsh-fish-pet
+dsh plugin --profile web remove dsh-neko-pet
 ```
 
-然后重启 DSH。配置文件里残留的 `dsh-fish-pet` 行不影响启动（找不到模块会被忽略），也可以在 `cordis.patch.yml` 里手动删掉。
+然后重启 DSH。配置文件里残留的 `dsh-neko-pet` 行不影响启动（找不到模块会被忽略），也可以在 `cordis.patch.yml` 里手动删掉。
 
 ---
 
@@ -211,28 +211,28 @@ dsh plugin --profile web remove dsh-fish-pet
 
 ```bash
 # ① 素材目录
-curl -s http://127.0.0.1:3080/plugins/dsh-fish-pet/packs | head -c 300
+curl -s http://127.0.0.1:3080/plugins/dsh-neko-pet/packs | head -c 300
 # 期望：skins 里有 paopao（自备包放 packs/local/ 后会一并出现），
 #       accessories 里有 cat-ears / ribbon / round-glasses / cape，errors 为空
 
 # ② 素材文件
 curl -s -o /dev/null -w "%{http_code} %{content_type}\n" \
-  "http://127.0.0.1:3080/plugins/dsh-fish-pet/asset?pack=paopao&path=layers%2Fbody.svg"
+  "http://127.0.0.1:3080/plugins/dsh-neko-pet/asset?pack=paopao&path=layers%2Fbody.svg"
 # 期望：200 image/svg+xml
 
 # ③ 路径防护
 curl -s -o /dev/null -w "%{http_code}\n" \
-  "http://127.0.0.1:3080/plugins/dsh-fish-pet/asset?pack=paopao&path=..%2F..%2Fpackage.json"
+  "http://127.0.0.1:3080/plugins/dsh-neko-pet/asset?pack=paopao&path=..%2F..%2Fpackage.json"
 # 期望：404
 
 # ④ Agent 气泡
 curl -s -X POST -H 'content-type: application/json' \
   -d '{"text":"验收一下","durationMs":6000}' \
-  http://127.0.0.1:3080/plugins/dsh-fish-pet/say
+  http://127.0.0.1:3080/plugins/dsh-neko-pet/say
 # 期望：{"ok":true,...}，头顶气泡立刻变成这句话，6 秒后消失
 
 # ⑤ 悬浮窗页面（页面里会自动带 token；这里手工模拟）
-curl -s "http://127.0.0.1:3080/plugins/dsh-fish-pet/desktop?token=abc" | grep desktop.js
+curl -s "http://127.0.0.1:3080/plugins/dsh-neko-pet/desktop?token=abc" | grep desktop.js
 # 期望：script src 带 ?token=abc；再 curl /desktop.js 应为 200
 ```
 

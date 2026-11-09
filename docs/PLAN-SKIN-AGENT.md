@@ -1,7 +1,7 @@
 # 形象素材库 · 可动挂件 · Agent 动作接口 —— 设计方案
 
 > 状态：**P1–P3 已实现**（2026-11-09）。实施结果见文末 §13；格式细节以 [`ASSET-GUIDE.md`](ASSET-GUIDE.md) 为准，架构说明以 [`ARCHITECTURE.md`](ARCHITECTURE.md) §6 为准。
-> 目标仓库：`dsh-fish-pet`（MIT，DSH 页面内桌宠）。
+> 目标仓库：`dsh-neko-pet`（MIT，DSH 页面内桌宠）。
 > 参考形态：Coopanion 的「大肥鱼」展示层——**只参考能力边界，不取代码、不取美术**（理由见 `LEGAL.md`）。
 
 ---
@@ -73,8 +73,8 @@
 │   src/pet.js      新增：PetDirector——动作队列 / TTL / 优先级           │
 │   src/tools.js    新增：ctx.tools.register × 4                        │
 │   src/state.js    改动：暴露 pose 供 director 覆盖                    │
-│   /plugins/dsh-fish-pet/assets/<pack>/<file>   ← 新增静态素材路由      │
-│   /plugins/dsh-fish-pet/packs                  ← 新增目录 JSON        │
+│   /plugins/dsh-neko-pet/assets/<pack>/<file>   ← 新增静态素材路由      │
+│   /plugins/dsh-neko-pet/packs                  ← 新增目录 JSON        │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -105,7 +105,7 @@ packs/                      ← 素材根目录（可配置；默认位于用户
 ```
 
 - 一个目录 = 一个包；`manifest.json` 里 `kind` 区分 `skin`（整套角色）与 `accessory`（单件挂件）。
-- **仓库只含 `packs/paopao/`**（原创）。用户目录通过配置项 `packsDir` 指向，默认 `%LOCALAPPDATA%/dsh-fish-pet/packs`（macOS/Linux 用对应 XDG 路径）。
+- **仓库只含 `packs/paopao/`**（原创）。用户目录通过配置项 `packsDir` 指向，默认 `%LOCALAPPDATA%/dsh-neko-pet/packs`（macOS/Linux 用对应 XDG 路径）。
 
 ### 4.2 `manifest.json`（skin）
 
@@ -115,7 +115,7 @@ packs/                      ← 素材根目录（可配置；默认位于用户
   "kind": "skin",
   "id": "paopao",
   "name": "泡泡",
-  "author": "dsh-fish-pet",
+  "author": "dsh-neko-pet",
   "license": "MIT",
   "canvas": { "width": 140, "height": 130 },   // 逻辑画布，所有 layer 同尺寸
   "anchors": {                                  // 归一化坐标 0..1，挂件吸附用
@@ -405,7 +405,7 @@ export function registerPetTools(ctx, { director, wardrobe, packs }) {
 
 | # | 风险 | 影响 | 应对 |
 | --- | --- | --- | --- |
-| 1 | **本机无 DSH**，无法实机验证 | 中 | 全部按「探测 + 降级」写；加 `DSH_FISH_PET_TRACE` 追踪点；交付时给一份实机验证清单 |
+| 1 | **本机无 DSH**，无法实机验证 | 中 | 全部按「探测 + 降级」写；加 `DSH_NEKO_PET_TRACE` 追踪点；交付时给一份实机验证清单 |
 | 2 | DSH 0.2.x 客户端槽位/事件可能变化 | 中 | 不新增对私有 API 的依赖；新消息类型不认识即忽略 |
 | 3 | `@deepseek-ai/dsh-tools` 解析不到 | 中 | 动态导入 + 手写同形 ToolDefinition 兜底 |
 | 4 | 素材体积（PNG 分层）拖慢首屏 | 低 | 懒加载 + 只在 pose 变化时换 variant；内置包控制在 100KB 内 |

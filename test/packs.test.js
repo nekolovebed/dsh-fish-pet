@@ -74,10 +74,10 @@ test('the bundled packs load and hydrate their asset URLs', () => {
   for (const layer of skin.layers) {
     if (layer.variants) {
       for (const url of Object.values(layer.variants)) {
-        assert.match(url, /^\/plugins\/dsh-fish-pet\/asset\?pack=paopao&path=/)
+        assert.match(url, /^\/plugins\/dsh-neko-pet\/asset\?pack=paopao&path=/)
       }
     } else {
-      assert.match(layer.src, /^\/plugins\/dsh-fish-pet\/asset\?pack=paopao&path=/)
+      assert.match(layer.src, /^\/plugins\/dsh-neko-pet\/asset\?pack=paopao&path=/)
     }
   }
 

@@ -94,7 +94,7 @@ export class DesktopPetWindow {
         hasShadow: false,
         alwaysOnTop: true,
         show: false,
-        title: 'dsh-fish-pet',
+        title: 'dsh-neko-pet',
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,

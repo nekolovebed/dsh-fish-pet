@@ -67,7 +67,7 @@ projects.
 “DeepSeek”, the DeepSeek whale mark, and other product names are trademarks or
 registered trademarks of their respective owners. They are used here only in
 descriptive, nominative form (to say which harness this plugin runs on). This
-project's name, package name (`dsh-fish-pet`) and character are deliberately
+project's name, package name (`dsh-neko-pet`) and character are deliberately
 distinct from those marks so as not to suggest endorsement.
 
 ## 4. Runtime dependencies

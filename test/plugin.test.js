@@ -173,7 +173,7 @@ test('the pack catalog is served with hydrated asset URLs', () => {
   assert.equal(response.status, 200)
   assert.equal(body.skins.length, 1)
   assert.equal(body.accessories.length, 4)
-  assert.match(body.skins[0].layers[0].src, /^\/plugins\/dsh-fish-pet\/asset/)
+  assert.match(body.skins[0].layers[0].src, /^\/plugins\/dsh-neko-pet\/asset/)
 })
 
 test('asset requests are served, and traversal is refused', async () => {

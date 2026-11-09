@@ -27,7 +27,7 @@ packs/
   "kind": "skin",
   "id": "paopao",                 // 必须等于目录名，^[a-z0-9][a-z0-9._-]*$
   "name": "泡泡",                  // 面板上显示的名字
-  "author": "dsh-fish-pet",
+  "author": "dsh-neko-pet",
   "license": "MIT",               // 必填：素材的权利声明
   "description": "一句话描述",
   "canvas": { "width": 140, "height": 130 },   // 逻辑画布，16..4096
@@ -145,7 +145,7 @@ packs/
 命令行等价操作：
 
 ```bash
-curl -X POST http://127.0.0.1:3080/plugins/dsh-fish-pet/packs
+curl -X POST http://127.0.0.1:3080/plugins/dsh-neko-pet/packs
 ```
 
 ---

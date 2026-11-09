@@ -1,5 +1,5 @@
 {
-  "name": "dsh-fish-pet",
+  "name": "dsh-neko-pet",
   "version": "0.1.0",
   "description": "An in-page fish companion for DeepSeek Harness: reacts to session state, shows account balance and task status, and chats through a real DSH session with full tool access.",
   "type": "module",
@@ -41,7 +41,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nekolovebed/dsh-fish-pet.git"
+    "url": "git+https://github.com/nekolovebed/dsh-neko-pet.git"
   },
   "dsh": {
     "client": {

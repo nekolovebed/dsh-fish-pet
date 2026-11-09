@@ -3,7 +3,7 @@
   "kind": "accessory",
   "id": "cape",
   "name": "小披风",
-  "author": "dsh-fish-pet",
+  "author": "dsh-neko-pet",
   "license": "MIT",
   "description": "一件薄荷绿的小披风，从背后披下来。",
   "slot": "back",

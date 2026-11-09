@@ -97,8 +97,8 @@
 │        ├── Bubble           当前姿态 / 最近一句对话                  │
 │        └── Panel            余额 · 用量 · 任务清单 · 对话输入        │
 │                                                                    │
-│   EventSource /plugins/dsh-fish-pet/stream   ← 单向状态推送          │
-│   fetch POST  /plugins/dsh-fish-pet/chat     → 发送一句话            │
+│   EventSource /plugins/dsh-neko-pet/stream   ← 单向状态推送          │
+│   fetch POST  /plugins/dsh-neko-pet/chat     → 发送一句话            │
 └───────────────────────────────┬────────────────────────────────────┘
                                 │ 仅回环地址，校验 Origin
 ┌───────────────────────────────┴────────────────────────────────────┐
@@ -215,7 +215,7 @@
 
 **踩到的三个坑（都写进了 INSTALL 的排错表）**
 
-1. **未声明的服务不能碰。** Cordis 对 `ctx.<service>` 有访问守卫：只要服务没写进 `inject`，读取属性就抛 `cannot get property "webServer" without inject`。我最初只 inject 了 `sessions`，却在 `mount()` 里读 `ctx.settings`，异常被自己的兜底 `catch` 吞掉，表现为「插件静默不生效、日志一片安静」。这类失败最难查，所以插件内置了文件级追踪（`DSH_FISH_PET_TRACE`）。
+1. **未声明的服务不能碰。** Cordis 对 `ctx.<service>` 有访问守卫：只要服务没写进 `inject`，读取属性就抛 `cannot get property "webServer" without inject`。我最初只 inject 了 `sessions`，却在 `mount()` 里读 `ctx.settings`，异常被自己的兜底 `catch` 吞掉，表现为「插件静默不生效、日志一片安静」。这类失败最难查，所以插件内置了文件级追踪（`DSH_NEKO_PET_TRACE`）。
 2. **控制台日志不可靠。** 启动早期的 `console.log` 未必能出现在终端，导致「看起来没运行」。用文件追踪才看到 `apply` 其实一直在跑。
 3. **Windows 绝对路径必须是 `file://` URL。** 在 `cordis.yml` 里写 `D:/a/b.js` 会被当成协议 `d:` 而报 `ERR_UNSUPPORTED_ESM_URL_SCHEME`；写 `/d/a/b.js` 会被解析成 `C:\d\…`。只能用 `file:///D:/a/b.js`。
 
@@ -270,7 +270,7 @@ manifest.json  ──►  PackRegistry（校验 / 白名单 / 目录）  ──�
 | `pet_wear` | 穿 / 脱 / 全脱 | 与设置页共用 `applyWear()` |
 | `pet_skin` | 查 / 换皮肤 | 未知 id 明确拒绝 |
 
-`POST /plugins/dsh-fish-pet/say` 是同一块 `SayBoard` 的 HTTP 入口（`GET` 读快照、`DELETE` 清空），供不经过工具注册表的脚本或其他插件使用。气泡只有一个，优先级是 `pet_say` > `pet_act` 台词 > 最近一句对话 > 会话阶段。
+`POST /plugins/dsh-neko-pet/say` 是同一块 `SayBoard` 的 HTTP 入口（`GET` 读快照、`DELETE` 清空），供不经过工具注册表的脚本或其他插件使用。气泡只有一个，优先级是 `pet_say` > `pet_act` 台词 > 最近一句对话 > 会话阶段。
 
 三个实现细节：
 

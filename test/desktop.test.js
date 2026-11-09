@@ -17,7 +17,7 @@ test('the desktop overlay degrades to unsupported on a plain Node host', (t) => 
     size: { width: 300, height: 460 },
   })
 
-  const result = desktop.open('http://127.0.0.1:3099/plugins/dsh-fish-pet/desktop')
+  const result = desktop.open('http://127.0.0.1:3099/plugins/dsh-neko-pet/desktop')
   assert.equal(result.ok, false)
   assert.match(result.reason, /桌面版/)
   assert.equal(desktop.isOpen, false)

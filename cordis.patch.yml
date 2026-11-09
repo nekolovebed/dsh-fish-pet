@@ -1,8 +1,8 @@
-# dsh-fish-pet: one host row. The browser half is declared through
+# dsh-neko-pet: one host row. The browser half is declared through
 # package.json -> dsh.client and is loaded by the web bundle.
 - insert:
-    - id: dsh-fish-pet
-      name: dsh-fish-pet
+    - id: dsh-neko-pet
+      name: dsh-neko-pet
       config:
         enabled: true
         scale: 1
