@@ -20,6 +20,7 @@ import { Config, NAMESPACE, defaults, normalizeConfig, writableKeys } from './co
 import { DEFAULT_PACKS_ROOT, PackRegistry } from './packs.js'
 import { resolveWorn, normalizeWorn } from './wardrobe.js'
 import { PetDirector } from './pet.js'
+import { MotionDirector } from './motion.js'
 import { SayBoard } from './say.js'
 import { DesktopPetWindow } from './desktop.js'
 import { registerPetTools } from './tools.js'
@@ -228,6 +229,7 @@ function mount(ctx, config) {
   trace(`packs root = ${packs.root}`)
   packs.reload()
   const director = new PetDirector({ emit: (payload) => stream.broadcast(payload) })
+  const motion = new MotionDirector({ emit: (payload) => stream.broadcast(payload) })
   const say = new SayBoard({ emit: (payload) => stream.broadcast(payload) })
   const desktop = new DesktopPetWindow({ width: 300, height: 460, log: trace })
 
@@ -393,6 +395,7 @@ function mount(ctx, config) {
         balancePayload(),
         wardrobePayload(),
         director.snapshot(),
+        motion.snapshot(),
         say.snapshot(),
       ]
       const remove = stream.add(res, seed)
@@ -430,6 +433,7 @@ function mount(ctx, config) {
         balance: balancePayload(),
         wardrobe: wardrobePayload(),
         action: director.snapshot(),
+        motion: motion.snapshot(),
         say: say.snapshot(),
         desktop: desktop.status(),
         packs: { root: packs.root, skins: packs.skins.size, accessories: packs.accessories.size, errors: packs.errors },
@@ -621,6 +625,7 @@ function mount(ctx, config) {
         disposeTools = registerPetTools(toolCtx, {
           packs,
           director,
+          motion,
           getConfig: () => settings.get(),
           patchConfig,
           tracker: () => tracker,
@@ -642,6 +647,55 @@ function mount(ctx, config) {
     logger.warn?.('[dsh-fish-pet] 无法接入 Agent 工具（桌宠显示不受影响）')
   }
 
+  // --- skill: teach the agent when to use the pet --------------------------
+  // Registered at runtime (no files on disk), and guarded the same way as the
+  // tools: a harness without `skills` loses only the guidance, never the pet.
+  try {
+    const registerSkill = (skillsCtx) => {
+      try {
+        const disposer = skillsCtx.skills?.register?.({
+          name: 'desk-pet',
+          description: '控制页面右下角的桌宠：做动作、说话、走路、转移视线、换装和换皮肤。',
+          whenToUse: '想让桌宠对任务结果做可视反馈（开始、完成、出错、等待确认），或用户直接让你逗它、让它动、让它说话的时候。',
+          content: [
+            '# 桌宠控制',
+            '',
+            '页面右下角有一只桌宠，你是它的操控者。可用工具：',
+            '',
+            '- `pet_act`：原地动作（挥手/跳/转圈/跳舞/打盹/欢呼/害羞/发呆），可带一句气泡台词',
+            '- `pet_say`：只说一句话（汇报进度、吐槽、提醒）',
+            '- `pet_move`：走路（walk to=left/right/center）、转移视线（look at=cursor/left/…）、恢复（reset）',
+            '- `pet_wear` / `pet_skin`：换挂件和皮肤；`pet_status` 查看目录与当前状态',
+            '',
+            '## 什么时候该动',
+            '',
+            '- 接到一个大任务时：`pet_act` 打个招呼或 `pet_move` 走到屏幕中间',
+            '- 任务完成：欢呼 + 一句台词；出错：打盹/害羞 + 简短道歉',
+            '- 需要用户批准时：走到用户附近并看向屏幕（at=cursor）',
+            '',
+            '## 克制原则（重要）',
+            '',
+            '- 用户在专注工作时**不要乱动**，任务事件已经会自动驱动它的姿态',
+            '- 一次 `pet_act`/`pet_move` 就够，不要连续调用多个动作',
+            '- 眨眼、呼吸等微动作是自动的，**不要**也不要试图控制它们',
+            '- 拿不准现在什么状态就先 `pet_status`',
+          ].join('\n'),
+        })
+        if (typeof disposer === 'function') {
+          ctx.effect(() => disposer)
+        }
+        trace('desk-pet skill registered')
+      } catch (error) {
+        trace(`skill registration threw: ${error instanceof Error ? error.message : String(error)}`)
+        logger.warn?.('[dsh-fish-pet] skill 注册失败（Agent 指引不可用，工具不受影响）', error)
+      }
+    }
+    if (typeof ctx.inject === 'function') ctx.inject(['skills'], registerSkill)
+    else registerSkill(ctx)
+  } catch (error) {
+    trace(`skills inject failed: ${error instanceof Error ? error.message : String(error)}`)
+  }
+
   // Prime the panel so the first client paint is never empty.
   pushAll()
   void refreshBalance()
@@ -656,6 +710,7 @@ function mount(ctx, config) {
       onDisposed?.()
       disposeTools?.()
       director.dispose()
+      motion.dispose()
       say.dispose()
       desktop.close()
     } catch (error) {

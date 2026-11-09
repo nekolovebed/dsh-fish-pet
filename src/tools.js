@@ -8,6 +8,7 @@
  *   pet_say     write: put one line in the head bubble
  *   pet_wear    write: wear / remove / clear gear
  *   pet_skin    write: switch the skin pack
+ *   pet_move    write: continuous motion — walk somewhere, point the gaze
  *
  * `pet_status` carries the catalog inline. That is the whole point of the
  * feature: a pack dropped into `packs/` becomes visible to the model without a
@@ -20,7 +21,7 @@
  * building it here keeps the plugin installable and cannot break on a version
  * bump. The shapes below mirror `@deepseek-ai/dsh-tools` 0.0.1-rc.1.
  */
-import { ACTION_LABEL, Action, SLOTS, SLOT_LABEL, ACTION_DURATION } from './protocol.js'
+import { ACTION_LABEL, Action, GAZE_TARGETS, SLOTS, SLOT_LABEL, ACTION_DURATION, WALK_TARGETS } from './protocol.js'
 import { applyWear, resolveWorn } from './wardrobe.js'
 
 const OUTPUT_SCHEMA = { type: 'object' }
@@ -44,6 +45,7 @@ function describeAccessory(item) {
  * @param {object} deps
  * @param {import('./packs.js').PackRegistry} deps.packs
  * @param {import('./pet.js').PetDirector} deps.director
+ * @param {import('./motion.js').MotionDirector} [deps.motion]
  * @param {import('./say.js').SayBoard} [deps.say]
  * @param {() => object} deps.getConfig
  * @param {(patch: object) => Promise<object>} deps.patchConfig
@@ -51,7 +53,7 @@ function describeAccessory(item) {
  * @param {() => object} [deps.reloadPacks]
  */
 export function createPetTools(deps) {
-  const { packs, director, say, getConfig, patchConfig, tracker, reloadPacks } = deps
+  const { packs, director, motion, say, getConfig, patchConfig, tracker, reloadPacks } = deps
 
   const readCatalog = () => {
     // A cheap mtime-guarded rescan: drop a pack in, call the tool, see it.
@@ -87,6 +89,7 @@ export function createPetTools(deps) {
           stage: state.stage ?? '',
           detail: state.detail ?? '',
           action: director.active ? { action: director.active.action, until: director.active.until } : null,
+          motion: motion ? motion.snapshot() : null,
         },
         skin: skin ? { id: skin.id, name: skin.name, license: skin.license } : null,
         worn,
@@ -241,7 +244,44 @@ export function createPetTools(deps) {
     },
   }
 
-  return [statusTool, actTool, sayTool, wearTool, skinTool]
+  /**
+   * Continuous motion. Kept separate from `pet_act` on purpose: clips are
+   * discrete performances, gaze and walking are sticky states that must
+   * compose with everything else (the pet walks while a dance clip plays).
+   */
+  const moveTool = {
+    name: 'pet_move',
+    description:
+      '移动桌宠或转移它的视线。op=look 让它看向某处（at=cursor 跟随鼠标 / left / right / up / down / front，或给 x、y 各 -1..1）；'
+      + 'op=walk 让它走到屏幕某处（to=left / right / center，或 0..1 的视口位置，0 是最左）；op=reset 恢复默认。'
+      + '这些是持续状态，会与 pet_act 的动作叠加：它可以一边走一边挥手。',
+    parameters: objectSchema({
+      op: { type: 'string', enum: ['look', 'walk', 'reset'], description: '操作' },
+      at: {
+        type: 'string',
+        enum: GAZE_TARGETS,
+        description: 'look 的目标；省略 at 时可用 x/y 精确指定',
+      },
+      x: { type: 'number', description: 'look 的水平偏移，-1..1，0 是正前方' },
+      y: { type: 'number', description: 'look 的垂直偏移，-1..1，0 是正前方' },
+      to: { type: 'string', description: `walk 的目的地：${WALK_TARGETS.join('/')}，或 0..1 的视口位置字符串` },
+      durationMs: { type: 'integer', description: '持续时间（毫秒）。walk 400–20000，look 300–60000；省略用默认值' },
+      scope: { type: 'string', enum: ['all', 'gaze', 'walk'], description: 'reset 的范围，默认 all' },
+    }, ['op']),
+    output: { schema: OUTPUT_SCHEMA, render: (_args, value) => textResult(value) },
+    async execute(args) {
+      if (!motion || typeof motion.look !== 'function') {
+        return { ok: false, reason: '当前宿主没有运动通道（版本过旧）' }
+      }
+      const op = args?.op
+      if (op === 'look') return motion.look({ at: args?.at, x: args?.x, y: args?.y, durationMs: args?.durationMs })
+      if (op === 'walk') return motion.walk({ to: args?.to, durationMs: args?.durationMs })
+      if (op === 'reset') return motion.reset({ scope: args?.scope })
+      return { ok: false, reason: `未知操作 ${op}，可用 look / walk / reset` }
+    },
+  }
+
+  return [statusTool, actTool, sayTool, wearTool, skinTool, moveTool]
 }
 
 /**

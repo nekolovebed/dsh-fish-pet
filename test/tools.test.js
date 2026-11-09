@@ -10,6 +10,7 @@ import assert from 'node:assert/strict'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PackRegistry } from '../src/packs.js'
+import { MotionDirector } from '../src/motion.js'
 import { PetDirector } from '../src/pet.js'
 import { SayBoard } from '../src/say.js'
 import { createPetTools, registerPetTools } from '../src/tools.js'
@@ -23,10 +24,12 @@ function harness() {
   const packs = new PackRegistry({ root: repoPacks })
   packs.reload()
   const director = new PetDirector({ emit: () => {} })
+  const motion = new MotionDirector({ emit: () => {} })
   const say = new SayBoard({ emit: () => {} })
   const tools = createPetTools({
     packs,
     director,
+    motion,
     say,
     getConfig: () => config,
     patchConfig: async (patch) => {
@@ -42,12 +45,12 @@ function harness() {
     reloadPacks: () => packs.reload(),
   })
   const byName = Object.fromEntries(tools.map((tool) => [tool.name, tool]))
-  return { config, patches, director, say, tools, byName }
+  return { config, patches, director, motion, say, tools, byName }
 }
 
 test('every tool declares the shape the registry enforces', () => {
   const { tools } = harness()
-  assert.deepEqual(tools.map((tool) => tool.name).sort(), ['pet_act', 'pet_say', 'pet_skin', 'pet_status', 'pet_wear'])
+  assert.deepEqual(tools.map((tool) => tool.name).sort(), ['pet_act', 'pet_move', 'pet_say', 'pet_skin', 'pet_status', 'pet_wear'])
   for (const tool of tools) {
     assert.equal(typeof tool.name, 'string')
     assert.ok(tool.description.length > 10, `${tool.name} needs a real description`)
@@ -175,4 +178,63 @@ test('registration hands every definition to ctx.tools and disposes them', () =>
   assert.deepEqual(registered.sort(), tools.map((tool) => tool.name).sort())
   dispose()
   assert.equal(disposed.length, registered.length)
+})
+
+test('pet_move walks the pet and reports the resolved state', async () => {
+  const { byName } = harness()
+  const result = await byName.pet_move.execute({ op: 'walk', to: 'left' })
+  assert.equal(result.ok, true)
+  assert.equal(result.walk.to, 'left')
+  assert.ok(result.walk.until > 0)
+})
+
+test('pet_move clamps numeric destinations and says so', async () => {
+  const { byName } = harness()
+  const result = await byName.pet_move.execute({ op: 'walk', to: '2.5' })
+  assert.equal(result.ok, true)
+  assert.equal(result.walk.to, 1)
+  assert.ok(result.clamped.some((entry) => entry.startsWith('to:')))
+})
+
+test('pet_move rejects a nonsense destination with the vocabulary', async () => {
+  const { byName } = harness()
+  const result = await byName.pet_move.execute({ op: 'walk', to: 'upstairs' })
+  assert.equal(result.ok, false)
+  assert.match(result.reason, /未知目的地/)
+})
+
+test('pet_move points the gaze and can reset it', async () => {
+  const { byName, motion } = harness()
+  const look = await byName.pet_move.execute({ op: 'look', at: 'cursor' })
+  assert.equal(look.ok, true)
+  assert.equal(look.gaze.mode, 'cursor')
+  assert.ok(motion.snapshot().gaze)
+
+  const reset = await byName.pet_move.execute({ op: 'reset' })
+  assert.equal(reset.ok, true)
+  assert.equal(motion.snapshot().gaze, null)
+})
+
+test('pet_move reports a missing motion channel instead of throwing', async () => {
+  const packs = new PackRegistry({ root: repoPacks })
+  packs.reload()
+  const tools = createPetTools({
+    packs,
+    director: new PetDirector({ emit: () => {} }),
+    getConfig: () => ({}),
+    patchConfig: async (patch) => patch,
+  })
+  const move = tools.find((tool) => tool.name === 'pet_move')
+  const result = await move.execute({ op: 'look', at: 'left' })
+  assert.equal(result.ok, false)
+  assert.match(result.reason, /运动通道/)
+})
+
+test('pet_status carries the motion snapshot so the model can see the state', async () => {
+  const { byName, motion } = harness()
+  motion.walk({ to: 'center' })
+  const status = await byName.pet_status.execute({})
+  assert.equal(status.ok, true)
+  assert.equal(status.state.motion.kind, 'motion')
+  assert.ok(status.state.motion.walk)
 })

@@ -359,3 +359,39 @@ test('the active skin follows the wardrobe message, then the config', () => {
   assert.deepEqual(wornItems({ wardrobe: { worn: ['cat-ears'] }, catalog }), [CAT_EARS])
   assert.deepEqual(wornItems({ wardrobe: { worn: ['ghost'] }, catalog }), [])
 })
+
+test('layers flagged with a gaze factor ride in a parallax wrapper', () => {
+  const { mod } = loadClient()
+  const { RigStage } = mod.__internals
+
+  const gazedSkin = {
+    ...SKIN,
+    layers: [
+      { id: 'body', src: '/body.svg', z: 10 },
+      { id: 'head', src: '/head.svg', z: 14, gaze: 0.5 },
+      { id: 'eyes', z: 20, gaze: 1, variants: { open: '/eyes-open.svg' } },
+    ],
+  }
+  const html = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: gazedSkin, worn: [], pose: 'IDLE', action: null,
+  }))
+
+  assert.match(html, /fp-gaze/, 'gaze layers must be wrapped')
+  assert.match(html, /\/head\.svg/, 'the wrapped layer still renders')
+  assert.match(html, /\/eyes-open\.svg/)
+})
+
+test('layers without a gaze factor render bare, with no wrapper', () => {
+  const { mod } = loadClient()
+  const { RigStage } = mod.__internals
+
+  const html = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: SKIN, worn: [], pose: 'IDLE', action: null,
+  }))
+  assert.doesNotMatch(html, /fp-gaze/, 'no gaze variables declared, no wrapper')
+
+  const walking = renderToStaticMarkup(React.createElement(RigStage, {
+    skin: SKIN, worn: [], pose: 'IDLE', action: null, walking: true,
+  }))
+  assert.match(walking, /fp-walking/, 'a walk must put the rig into its walking animation')
+})

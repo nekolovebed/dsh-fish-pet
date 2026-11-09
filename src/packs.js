@@ -109,6 +109,10 @@ function cleanLayer(raw, index, errors, tag) {
   }
   const pivot = asUnitPair(raw.pivot)
   if (pivot) layer.pivot = pivot
+  // Gaze parallax factor: how strongly this layer follows the gaze variables
+  // (eyes 1, head ~0.5). Anything outside the band is dropped, not clamped, so
+  // a typo in a manifest cannot silently fling a layer across the canvas.
+  if (isFiniteNumber(raw.gaze) && raw.gaze > 0 && raw.gaze <= 1.5) layer.gaze = raw.gaze
   if (typeof raw.optional === 'boolean') layer.optional = raw.optional
   return layer
 }

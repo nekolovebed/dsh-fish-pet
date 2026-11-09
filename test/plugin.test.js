@@ -151,7 +151,7 @@ function bodyOf(response) {
   }
 }
 
-test('mount registers every route and the five agent tools', () => {
+test('mount registers every route and the six agent tools', () => {
   const { context, routes, tools } = fakeContext()
   apply(context, {})
 
@@ -159,7 +159,7 @@ test('mount registers every route and the five agent tools', () => {
     assert.ok(routes.has(path), `missing route ${path}`)
   }
   assert.equal(routes.size, 10)
-  assert.deepEqual(tools.map((tool) => tool.name).sort(), ['pet_act', 'pet_say', 'pet_skin', 'pet_status', 'pet_wear'])
+  assert.deepEqual(tools.map((tool) => tool.name).sort(), ['pet_act', 'pet_move', 'pet_say', 'pet_skin', 'pet_status', 'pet_wear'])
 })
 
 test('the pack catalog is served with hydrated asset URLs', () => {
@@ -244,7 +244,7 @@ test('the SSE route seeds a client with state, wardrobe, action and catalog', ()
 test('unmounting disposes tools and stops the timers without throwing', () => {
   const { context, tools, disposers } = fakeContext()
   apply(context, {})
-  assert.equal(tools.length, 5)
+  assert.equal(tools.length, 6)
 
   for (const dispose of disposers.reverse()) {
     assert.doesNotThrow(() => dispose())

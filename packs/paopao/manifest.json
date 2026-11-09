@@ -21,12 +21,13 @@
     { "id": "legs", "src": "layers/legs.svg", "z": 9 },
     { "id": "body", "src": "layers/body.svg", "z": 10 },
     { "id": "arms", "src": "layers/arms.svg", "z": 11 },
-    { "id": "head", "src": "layers/head.svg", "z": 14 },
+    { "id": "head", "src": "layers/head.svg", "z": 14, "gaze": 0.5 },
     {
       "id": "eyes",
       "z": 20,
       "pivot": [0.5, 0.38],
       "motion": "blink",
+      "gaze": 0.8,
       "variants": {
         "open": "layers/eyes-open.svg",
         "happy": "layers/eyes-happy.svg",
@@ -44,7 +45,7 @@
       }
     },
     { "id": "blush", "src": "layers/blush.svg", "z": 22 },
-    { "id": "bangs", "src": "layers/bangs.svg", "z": 24 },
+    { "id": "bangs", "src": "layers/bangs.svg", "z": 24, "gaze": 0.45 },
     { "id": "hood", "src": "layers/hood.svg", "z": 30 },
     { "id": "hood-trim", "src": "layers/hood-trim.svg", "z": 31 }
   ],

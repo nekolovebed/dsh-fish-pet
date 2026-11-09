@@ -28,6 +28,13 @@ export const Kind = {
   WARDROBE: 'wardrobe',
   /** Every pack the host found, hydrated with asset URLs. */
   CATALOG: 'catalog',
+  /**
+   * Continuous motion intent from the agent (gaze / locomotion). Unlike
+   * {@link Kind.ACTION} clips these compose: the pet can walk while looking
+   * somewhere. Carries a monotonic `seq` so a client that receives a replayed
+   * snapshot never replays a walk it already performed.
+   */
+  MOTION: 'motion',
 }
 
 /** Companion poses. The browser half maps them to animations. */
@@ -116,6 +123,25 @@ export const SLOT_LABEL = {
 /** Motion vocabulary implemented by the browser half. */
 export const MOTIONS = ['bob', 'bob-fast', 'wag', 'sway', 'blink', 'hop', 'shake', 'droop', 'spin']
 
+/**
+ * Gaze targets. `cursor` follows the pointer; the rest are fixed offsets, so
+ * the agent can say "look at what you are reading" without knowing pixels.
+ */
+export const GAZE_TARGETS = ['front', 'cursor', 'left', 'right', 'up', 'down']
+
+/** Walk destinations. Numbers 0..1 (normalised viewport position) are strings here. */
+export const WALK_TARGETS = ['left', 'right', 'center']
+
+/** Bounds for continuous motion so an agent cannot send the pet off-screen. */
+export const MOTION_LIMITS = Object.freeze({
+  /** Gaze point components, normalised around the character. */
+  gazePoint: [-1, 1],
+  /** Walk duration in ms. */
+  walkDuration: [400, 20_000],
+  /** Gaze stickiness in ms. */
+  gazeDuration: [300, 60_000],
+})
+
 /** Task lifecycle states shown in the status panel. */
 export const TaskState = {
   RUNNING: 'running',
@@ -136,6 +162,7 @@ export const SNAPSHOT_KINDS = new Set([
   Kind.SAY,
   Kind.WARDROBE,
   Kind.CATALOG,
+  Kind.MOTION,
 ])
 
 /** Build one protocol message. */
